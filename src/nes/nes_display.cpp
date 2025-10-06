@@ -39,11 +39,13 @@ void display_write_frame(const uint8_t *data[]) {
         lineBuf[2] = BLACK;
         lineBuf[3] = BLACK;
 
-        for (int32_t x = 4; x < frame_width; x++) {
+        for (int32_t x = 4; x < frame_width - 1; x++) {
             int srcX = (x * NES_SCREEN_WIDTH) / frame_width - 4; // hack to avoid frame bleeding
             lineBuf[x] = myPalette[data[srcY][srcX]];
         }
         M5.Lcd.pushPixels(lineBuf, frame_width);
+        lineBuf[frame_width - 2] = BLACK; // same
+        lineBuf[frame_width - 1] = BLACK;
     }
     M5.Lcd.endWrite();
 }
