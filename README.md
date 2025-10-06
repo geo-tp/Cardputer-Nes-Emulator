@@ -5,7 +5,8 @@
 Powered by [Nofrendo](https://github.com/moononournation/arduino-nofrendo). **A full-speed NES emulator running on the M5Stack Cardputer**, with sound, video, and gamepad controls.
 
 It runs **.nes ROM files directly from the SD**, simply browse and select the game you want to play.
-**Make sure your ROMs are uncompressed** (.nes only — not .zip, .7z, or .rar).
+**Make sure your ROMs are uncompressed and included in the supported list below** (.nes only — not .zip, .7z, or .rar).
+
 ## Controls
 
 The built-in **Cardputer keyboard** is used for all NES controls: 
@@ -24,6 +25,8 @@ The built-in **Cardputer keyboard** is used for all NES controls:
 | 💡 Brightness − | **[** | Decrease LCD brightness |
 | 🔊 Volume + | **+** | Increase audio volume |
 | 🔊 Volume − | **-** | Decrease audio volume |
+
+**Note:** `fn` + `arrows` keys are also binded for brightness/sound controls. The `j` key is also bound as Button A to allow an alternative layout for player preference.
 
 ## Games Supported
 
