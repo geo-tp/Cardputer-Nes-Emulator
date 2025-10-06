@@ -34,17 +34,17 @@ void CardputerView::showKeymapping() {
         Display->drawCenterString(key, x + w/2, y + h/2 + textYOffset);
     };
 
-    // Croix
-    const int keyW = 22, keyH = 18, gap = 4;
-    const int padX = 22, padY = 52;
-    keyBox(padX + keyW + gap,   padY,                 keyW, keyH, "E");
-    keyBox(padX,                padY + keyH + gap,    keyW, keyH, "A");
-    keyBox(padX + keyW + gap,   padY + (keyH+gap)*2,  keyW, keyH, "S");
-    keyBox(padX + (keyW+gap)*2, padY + keyH + gap,    keyW, keyH, "D");
+    // Croix 
+    const int keyW = 22, keyH = 18, gap = 2;
+    const int padX = 26, padY = 56;
+    keyBox(padX + keyW + gap,   padY,                 keyW, keyH, "E"); // Haut
+    keyBox(padX,                padY + keyH + gap,    keyW, keyH, "A"); // Gauche
+    keyBox(padX + keyW + gap,   padY + (keyH+gap)*2,  keyW, keyH, "S"); // Bas
+    keyBox(padX + (keyW+gap)*2, padY + keyH + gap,    keyW, keyH, "D"); // Droite
 
-    // A/B
+    // A/B 
     const int rightBlockW = keyW * 2 + gap;
-    int abX = Display->width() - 20 - rightBlockW - 10;
+    int abX = Display->width() - 20 - rightBlockW - 10 - 5;
     const int abY = 70;
     const int abGap = gap + 5;
     keyBox(abX,               abY, keyW, keyH, "K");            // A
