@@ -13,9 +13,9 @@ The built-in **Cardputer keyboard** is used for all NES controls:
 | NES Function | Cardputer Key | Description |
 |---------------|---------------|-------------|
 | 🕹️ Up | **E** | Move up |
-| 🕹️ Down | **D** | Move down |
+| 🕹️ Down | **S** | Move down |
 | 🕹️ Left | **A** | Move left |
-| 🕹️ Right | **S** | Move right |
+| 🕹️ Right | **D** | Move right |
 | 🅰️ Button A | **K** | Primary action / confirm |
 | 🅱️ Button B | **L** | Secondary action / cancel |
 | ▶️ Start | **1** | Start / pause |
