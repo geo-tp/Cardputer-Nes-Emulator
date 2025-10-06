@@ -35,7 +35,7 @@ uint32_t controller_read_input() {
         value ^= (1 << 5); // start
     }
 
-    if (M5Cardputer.Keyboard.isKeyPressed('l')) {
+    if (M5Cardputer.Keyboard.isKeyPressed('l') || M5Cardputer.Keyboard.isKeyPressed('j')) {
         value ^= (1 << 6); // A
     }
     if (M5Cardputer.Keyboard.isKeyPressed('k')) {
