@@ -56,3 +56,13 @@ void CardputerInput::waitPress() {
     delay(10);
   }
 }
+
+void CardputerInput::flushInput(size_t ms) {
+    unsigned long start = millis();
+    while(millis() - start < ms){
+        M5Cardputer.update();
+        Keyboard_Class::KeysState status = M5Cardputer.Keyboard.keysState();
+        status.reset();
+        delay(1);
+    }
+}

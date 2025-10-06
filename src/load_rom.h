@@ -27,11 +27,12 @@ static inline std::string getRomPath(SdService& sdService, CardputerView& displa
 
     display.initialize();
     display.topBar("LOAD .nes ROM", false, false);
-    display.subMessage("Loading...", 500);
+    display.subMessage("Loading...", 0);
     if (!sdService.begin()) {
         display.subMessage("SD card not found", 2000);
         return "";
     }
+    input.flushInput(1000); // avoid double tap, flush any previous input
 
     std::string currentPath = "/";
     std::vector<std::string> elementNames;
