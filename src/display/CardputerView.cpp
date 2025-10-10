@@ -290,6 +290,38 @@ void CardputerView::verticalSelectionSimple(
     }
 }
 
+void CardputerView::drawSelectedRowMarquee(const std::string& text,
+                                           uint16_t rowInPage,
+                                           size_t visibleRows) {
+    const int rowH   = 26;
+    const int boxH   = 22;
+    const int boxX   = DEFAULT_MARGIN;
+    const int boxW   = Display->width() - 13;
+    const int padL   = 10;
+    const int viewPadR = 3;
+
+    const int y = TOP_BAR_HEIGHT + (int)rowInPage * rowH;
+
+    drawRect(true, boxX, y, boxW, boxH, 0);
+
+    const int viewX = boxX + padL;
+    const int viewW = boxW  - padL - viewPadR;
+
+    Display->setTextSize(TEXT_LARGE);
+    Display->setTextColor(TEXT_COLOR);
+
+    Display->setTextWrap(false);
+    Display->setTextDatum(textdatum_t::top_left);
+
+    Display->setClipRect(viewX, y, viewW, boxH);
+
+    const int textY = y + (boxH - /*approx hauteur police*/16)/2;
+    Display->drawString(text.c_str(), viewX, textY);
+
+    Display->clearClipRect();
+    Display->setTextDatum(middle_center);
+}
+
 void CardputerView::verticalSelectionWithLabelsAndShortcuts(
     const std::vector<std::string>& options,
     uint16_t selectedIndex,

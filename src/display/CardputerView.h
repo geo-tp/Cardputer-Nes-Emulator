@@ -56,6 +56,7 @@ public:
     void drawPlusIcon(int x=120, int y=47, uint16_t color = PRIMARY_COLOR);
     void drawMinusIcon(int x=120, int y=47, uint16_t color = PRIMARY_COLOR);
     void drawLockIcon(int x=120, int y=78, uint16_t color = PRIMARY_COLOR, size_t w=60, size_t h=45);
+    void drawSelectedRowMarquee(const std::string& text, uint16_t rowInPage, size_t visibleRows);
 private:
     static M5GFX* Display; 
     void drawRect(bool selected, uint8_t margin, uint16_t startY, uint16_t sizeX, uint16_t sizeY, uint16_t stepY);
