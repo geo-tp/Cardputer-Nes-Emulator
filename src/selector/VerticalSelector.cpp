@@ -16,67 +16,93 @@ int VerticalSelector::select(
         bool visibleMention,
         bool handleInactivity) 
 {
-    int currentIndex = 0;
-    int lastIndex = -1;
-    int lastQuerySize = 0;
+    int currentIndex = 0, lastIndex = -1, lastQuerySize = 0;
     char key = KEY_NONE;
     std::string searchQuery;
     std::vector<std::string> filteredOptions = options;
 
-    while (true) {
+    // Marquee state
+    std::string mBase;
+    size_t offset = 0;
+    uint32_t lastMs = 0, pauseUntil = 0;
 
-        // Display the current options and selection
-        if (lastIndex != currentIndex || lastQuerySize != searchQuery.size()) {
+    // Scrolling
+    const uint32_t STEP_MS = 200;
+    const size_t VISIBLE_CHARS = 20;
+    const int VISIBLE_ROWS = 4;
+
+    while (true) {
+        const bool selectionChanged = (lastIndex != currentIndex) || (lastQuerySize != (int)searchQuery.size());
+
+        // Full redraw
+        if (selectionChanged) {
             display.topBar(searchQuery.empty() ? title : searchQuery, subMenu, searchBar);
-            display.verticalSelection(filteredOptions, currentIndex, 4, options2, shortcuts, visibleMention);
+            display.verticalSelection(filteredOptions, currentIndex, VISIBLE_ROWS, options2, shortcuts, visibleMention);
+            if (!filteredOptions.empty()) mBase = filteredOptions[currentIndex];
+            offset = 0;
+            lastMs = millis();
             lastIndex = currentIndex;
-            lastQuerySize = searchQuery.size();
+            lastQuerySize = (int)searchQuery.size();
+        } else if (!filteredOptions.empty()) {
+            // Redraw partial
+            const std::string& base = filteredOptions[currentIndex];
+            uint32_t now = millis();
+
+            size_t startRow = (currentIndex / VISIBLE_ROWS) * VISIBLE_ROWS;
+            uint16_t rowInPage = currentIndex - startRow;
+
+            if (base.size() > VISIBLE_CHARS  && now - lastMs >= STEP_MS) {
+                lastMs = now;
+
+                if (offset >= base.size() - VISIBLE_CHARS) {
+                    offset = 0;
+                } else {
+                    offset++;
+                }
+
+                std::string view = base.substr(offset);
+                display.drawSelectedRowMarquee(view, rowInPage, VISIBLE_ROWS);
+            }            
         }
 
-        // Capture user input
+        // INPUT
         key = input.handler();
 
-        // Verify shortcuts
         if (!shortcuts.empty()) {
-            int shortcutIndex = checkShortcut(shortcuts, key);
-            if (shortcutIndex != -1) {
-                return shortcutIndex;
-            }
+            int si = checkShortcut(shortcuts, key);
+            if (si != -1) return si;
         }
 
         switch (key) {
             case KEY_ARROW_UP:
-                currentIndex = (currentIndex > 0) ? currentIndex - 1 : filteredOptions.size() - 1;
+                if (!filteredOptions.empty())
+                    currentIndex = (currentIndex > 0) ? currentIndex - 1 : (int)filteredOptions.size() - 1;
                 break;
             case KEY_ARROW_DOWN:
-                currentIndex = (currentIndex < filteredOptions.size() - 1) ? currentIndex + 1 : 0;
+                if (!filteredOptions.empty())
+                    currentIndex = (currentIndex < (int)filteredOptions.size() - 1) ? currentIndex + 1 : 0;
                 break;
             case KEY_OK:
-                for (size_t i = 0; i < options.size(); ++i) {
-                    if (options[i] == filteredOptions[currentIndex]) {
-                        return i;
-                    }
-                }
+                if (!filteredOptions.empty())
+                    for (size_t i = 0; i < options.size(); ++i)
+                        if (options[i] == filteredOptions[currentIndex]) return (int)i;
                 break;
             case KEY_ESC_CUSTOM:
-            case KEY_ARROW_LEFT: // Back
+            case KEY_ARROW_LEFT:
                 return -1;
-            case KEY_DEL: // Backspace for text search
+            case KEY_DEL:
                 if (searchBar && !searchQuery.empty()) {
                     searchQuery.pop_back();
                     filteredOptions = filterOptions(options, searchQuery);
                     currentIndex = 0;
-                } else {
-                    filteredOptions = options;
-                }
+                } else filteredOptions = options;
                 break;
             default:
-                if (searchBar && std::isalnum(key)) {
+                if (searchBar && std::isalnum((unsigned char)key)) {
                     searchQuery += key;
                     filteredOptions = filterOptions(options, searchQuery);
                     currentIndex = 0;
                 }
-                
                 break;
         }
     }
@@ -102,9 +128,9 @@ std::vector<std::string> VerticalSelector::filterOptions(const std::vector<std::
 int VerticalSelector::checkShortcut(const std::vector<std::string>& shortcuts, char key) {
     for (size_t i = 0; i < shortcuts.size(); ++i) {
         if (!shortcuts[i].empty() && std::tolower(key) == std::tolower(shortcuts[i][0])) {
-            return i; // Retourne l'index du raccourci correspondant
+            return i;
         }
     }
-    return -1; // Aucun raccourci correspondant trouvé
+    return -1;
 }
 
