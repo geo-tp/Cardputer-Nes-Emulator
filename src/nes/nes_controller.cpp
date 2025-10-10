@@ -1,5 +1,8 @@
 #include <M5Cardputer.h>
 
+extern bool fullscreenMode;
+extern int zoomPercent;
+
 extern "C" {
 
 void controller_init() {
@@ -11,6 +14,36 @@ uint32_t controller_read_input() {
 
     M5Cardputer.update();
     Keyboard_Class::KeysState status = M5Cardputer.Keyboard.keysState();
+
+    // Zoom control and screen mode toggle
+    if (M5Cardputer.Keyboard.isChange() && M5Cardputer.Keyboard.isKeyPressed('\\')) {
+        if (!fullscreenMode) {
+            fullscreenMode = true;
+            zoomPercent = 100;
+        } else {
+            zoomPercent += 10;
+            if (zoomPercent > 150) {
+                zoomPercent = 100;
+                fullscreenMode = false;
+            }
+        }
+
+        return value;
+    }
+
+    // Zoom in / out
+    if (status.fn && M5Cardputer.Keyboard.isKeyPressed('/')) {
+        zoomPercent+= 1;
+        if (zoomPercent > 150) zoomPercent = 150;
+        return value;
+
+    }
+
+    if (status.fn && M5Cardputer.Keyboard.isKeyPressed(',')) {
+        zoomPercent-= 1;
+        if (zoomPercent < 100) zoomPercent = 100;
+        return value;
+    }
 
     // Volume up
     if (M5Cardputer.Keyboard.isKeyPressed('=') || (status.fn && M5Cardputer.Keyboard.isKeyPressed(';'))) {
@@ -25,7 +58,7 @@ uint32_t controller_read_input() {
     }
 
     // Brightness control
-    if (M5Cardputer.Keyboard.isKeyPressed(']') || (status.fn && M5Cardputer.Keyboard.isKeyPressed('/'))) {
+    if (M5Cardputer.Keyboard.isKeyPressed(']')) {
         M5Cardputer.Display.setBrightness(min(M5Cardputer.Display.getBrightness() + 10, 255)); // brightness up
         return value;
     }
