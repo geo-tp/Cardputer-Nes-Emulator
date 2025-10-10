@@ -86,7 +86,7 @@ static inline std::string getRomPath(SdService& sdService, CardputerView& displa
                 display.subMessage("file .nes required", 2000);
                 continue; // non .nes
             }
-            return "/sd/" + nextPath; // file selected
+            return "/sd" + nextPath; // file selected
         }
     }
 
