@@ -64,7 +64,7 @@ void CardputerView::welcome() {
     Display->drawRoundRect(10, 13, 215, 30, 5, PRIMARY_COLOR);
 
     // Title
-    std::string title = "NES Emulator 0.1";
+    std::string title = "NES Emulator 0.2";
     Display->setTextColor(TEXT_COLOR);
     Display->setTextSize(TEXT_BIG);
     Display->setCursor(getCenterOffset(title), 28);
