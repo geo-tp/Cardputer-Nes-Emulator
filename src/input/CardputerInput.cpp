@@ -66,3 +66,22 @@ void CardputerInput::flushInput(size_t ms) {
         delay(1);
     }
 }
+
+
+char CardputerInput::readChar() {
+    M5Cardputer.update();
+    Keyboard_Class::KeysState status = M5Cardputer.Keyboard.keysState();
+    
+    // State change
+    if (!M5Cardputer.Keyboard.isChange()) return KEY_NONE;
+    if (!M5Cardputer.Keyboard.isPressed()) return KEY_NONE;
+
+    for (auto c : status.word) {
+        return c;
+    }
+
+    if (status.enter) return KEY_OK;
+    if (status.del) return KEY_DEL;
+
+    return KEY_NONE;
+}

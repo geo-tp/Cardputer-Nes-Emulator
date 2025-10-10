@@ -17,6 +17,7 @@
 class CardputerInput {
 public:
     char handler();
+    char readChar();
     void waitPress();
     void flushInput(size_t ms);
 };
