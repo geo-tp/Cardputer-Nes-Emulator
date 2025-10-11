@@ -93,8 +93,13 @@ uint32_t controller_read_input() {
     if (M5Cardputer.Keyboard.isKeyPressed('l') || M5Cardputer.Keyboard.isKeyPressed('j')) {
         value ^= (1 << 6); // A
     }
+  
     if (M5Cardputer.Keyboard.isKeyPressed('k')) {
         value ^= (1 << 7); // B
+    }
+  
+    if (M5Cardputer.Keyboard.isKeyPressed(' ')) {
+        value ^= (1 << 10); // pause
     }
 
     return value;
