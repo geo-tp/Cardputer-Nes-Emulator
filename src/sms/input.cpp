@@ -1,8 +1,11 @@
 #include "input.h"
-
 #include <algorithm>
+#include <M5Cardputer.h>
 
-// Helper
+extern bool fullscreen;
+extern bool scanline;
+extern int smsZoomPercent;
+
 static inline bool key(char c) {
     return M5Cardputer.Keyboard.isKeyPressed(c);
 }
@@ -19,6 +22,7 @@ void cardputer_read_input() {
     Keyboard_Class::KeysState status = M5Cardputer.Keyboard.keysState();
 
     // ---------- Raccourcis ----------
+
     // Volume +
     if (key('=') || (status.fn && key(';'))) {
         int v = M5Cardputer.Speaker.getVolume();
@@ -34,26 +38,57 @@ void cardputer_read_input() {
         return;
     }
     // Bright +
-    if (key(']') || (status.fn && key('/'))) {
+    if (key(']')) {
         int b = M5Cardputer.Display.getBrightness();
         M5Cardputer.Display.setBrightness(std::min(b + 10, 255));
         input.pad[0] = 0; input.system = 0;
         return;
     }
     // Bright -
-    if (key('[') || (status.fn && key(','))) {
+    if (key('[')) {
         int b = M5Cardputer.Display.getBrightness();
         M5Cardputer.Display.setBrightness(std::max(b - 10, 0));
         input.pad[0] = 0; input.system = 0;
         return;
     }
 
+    // --- fullscreen / zoom cycle ---
     if (M5Cardputer.Keyboard.isChange() && key('\\')) {
-        fullscreen = !fullscreen;
-        scanline   = fullscreen;   // full is scanlined by default
+        if (!fullscreen) {
+            fullscreen = true;
+            scanline   = true;
+            smsZoomPercent = 100;
+        } else {
+            smsZoomPercent += 10;
+            if (smsZoomPercent > 150) {
+                smsZoomPercent = 100;
+                fullscreen = false;
+                scanline   = false;
+            }
+        }
 
-        input.pad[0] = 0;
-        input.system = 0;
+        // Recalculer le scaler immédiatement
+        if (fullscreen) video_compute_scaler_full();
+        else            video_compute_scaler_square();
+
+        input.pad[0] = 0; input.system = 0;
+        return;
+    }
+
+    // --- Zoom fin (FN + , ou FN + /) ---
+    if (status.fn && key('/')) {
+        smsZoomPercent += 1;
+        if (smsZoomPercent > 150) smsZoomPercent = 150;
+        video_compute_scaler_full();
+        input.pad[0] = 0; input.system = 0;
+        return;
+    }
+
+    if (status.fn && key(',')) {
+        smsZoomPercent -= 1;
+        if (smsZoomPercent < 100) smsZoomPercent = 100;
+        video_compute_scaler_full();
+        input.pad[0] = 0; input.system = 0;
         return;
     }
 
