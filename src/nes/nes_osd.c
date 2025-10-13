@@ -249,42 +249,42 @@ void __wrap_bmp_destroy(bitmap_t **bmp)
     (void)bmp; /* no-op */
 }
 
-/* -------------------- XIP ROM access -------------------- */
+// /* -------------------- XIP ROM access -------------------- */
 
-/* Mapped ROM */
-static const uint8_t *g_rom_ptr = NULL;
-static size_t g_rom_size = 0;
-static spi_flash_mmap_handle_t g_rom_mmap = 0;
+// /* Mapped ROM */
+// static const uint8_t *g_rom_ptr = NULL;
+// static size_t g_rom_size = 0;
+// static spi_flash_mmap_handle_t g_rom_mmap = 0;
 
-/* Map the ROM partition for XIP access */
-int osd_xip_map_rom_partition(const char *part_name, size_t rom_size_effective)
-{
-    const esp_partition_t *p;
-    const void *ptr = NULL;
-    if (part_name == NULL) part_name = "rom";
+// /* Map the ROM partition for XIP access */
+// int osd_xip_map_rom_partition(const char *part_name, size_t rom_size_effective)
+// {
+//     const esp_partition_t *p;
+//     const void *ptr = NULL;
+//     if (part_name == NULL) part_name = "rom";
 
-    p = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_ANY, part_name);
-    if (!p) return -1;
+//     p = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_ANY, part_name);
+//     if (!p) return -1;
 
-    if (esp_partition_mmap(p, 0, p->size, SPI_FLASH_MMAP_DATA, &ptr, &g_rom_mmap) != ESP_OK)
-        return -2;
+//     if (esp_partition_mmap(p, 0, p->size, SPI_FLASH_MMAP_DATA, &ptr, &g_rom_mmap) != ESP_OK)
+//         return -2;
 
-    g_rom_ptr  = (const uint8_t *)ptr;
-    g_rom_size = (rom_size_effective > 0 && rom_size_effective <= p->size) ? rom_size_effective : p->size;
-    nofrendo_log_printf("OSD: XIP mapped '%s' size=%u\n", part_name, (unsigned)g_rom_size);
-    return 0;
-}
+//     g_rom_ptr  = (const uint8_t *)ptr;
+//     g_rom_size = (rom_size_effective > 0 && rom_size_effective <= p->size) ? rom_size_effective : p->size;
+//     nofrendo_log_printf("OSD: XIP mapped '%s' size=%u\n", part_name, (unsigned)g_rom_size);
+//     return 0;
+// }
 
-/** Get pointer/size of mapped ROM */
-const uint8_t* _osd_get_rom_ptr(void){ return g_rom_ptr; }
-size_t _osd_get_rom_size(void){ return g_rom_size; }
+// /** Get pointer/size of mapped ROM */
+// const uint8_t* _osd_get_rom_ptr(void){ return g_rom_ptr; }
+// size_t _osd_get_rom_size(void){ return g_rom_size; }
 
-void osd_xip_unmap(void)
-{
-    if (g_rom_mmap) {
-        spi_flash_munmap(g_rom_mmap);
-        g_rom_mmap = 0;
-    }
-    g_rom_ptr = NULL;
-    g_rom_size = 0;
-}
+// void osd_xip_unmap(void)
+// {
+//     if (g_rom_mmap) {
+//         spi_flash_munmap(g_rom_mmap);
+//         g_rom_mmap = 0;
+//     }
+//     g_rom_ptr = NULL;
+//     g_rom_size = 0;
+// }
