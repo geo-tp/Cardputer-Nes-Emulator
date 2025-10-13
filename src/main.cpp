@@ -5,12 +5,12 @@
 #include "sd/SdService.h"
 #include "vfs/vfs_xip.h"
 #include "vfs/rom_flash_io.h"
+#include "vfs/rom_xip.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-
-extern "C" int nofrendo_main(int argc, char *argv[]);
-extern "C" int osd_xip_map_rom_partition(const char *part_name, size_t rom_size_effective);
+#include "nes/run_nes.h"
+#include "sms/run_sms.h"
 
 void setup() {
   auto cfg = M5.config();
@@ -29,13 +29,13 @@ void setup() {
   // SD
   if (!sd.begin()) {
     while (1) {
-      display.topBar("SD CARD .nes ROM", false, false);
+      display.topBar("SD CARD ROM", false, false);
       display.subMessage("No SD card found", 0);
       delay(1000);
     }
   }
 
-  // Get the .nes ROM path from SD
+  // Get the ROM path from SD
   auto romPath = getRomPath(sd, display, input);
 
   display.topBar("COPYING TO FLASH", false, false);
@@ -62,7 +62,7 @@ void setup() {
   }
 
   // Map the ROM partition in XIP
-  if (osd_xip_map_rom_partition("spiffs", romSize) != 0) {
+  if (xip_map_rom_partition("spiffs", romSize) != 0) {
     while (1) {
       display.topBar("ERROR", false, false);
       display.subMessage("Map ROM failed", 0);
@@ -73,46 +73,29 @@ void setup() {
   // Register the XIP VFS
   vfs_xip_register();
 
-  // Show keymapping
-  display.topBar("- + SOUND [ ] BRIGHT", false, false);
-  display.showKeymapping();
-  
-  // Wait for key with animated hints
-  uint32_t lastUpdate = millis();
-  int state = 0;
-  while (true) {
-    char key = input.readChar();
-    if (key != KEY_NONE) break;
+  // Check the extension to choose the emulator
+  auto ext = getRomType(romPath);
 
-    uint32_t now = millis();
-    if (now - lastUpdate >= 2000) {
-        lastUpdate = now;
-
-        switch (state) {
-            case 0:
-                display.topBar("PRESS ANY KEY TO START", false, false);
-                break;
-            case 1:
-                display.topBar("KEY \\ SCREEN ZOOM", false, false);
-                break;
-            case 2:
-                display.topBar("- + SOUND [ ] BRIGHT", false, false);
-                break;
-        }
-        state = (state + 1) % 3;  // cycle
-    }
-    delay(1);
+  if (ext == ROM_TYPE_NES) {
+      // --- NES ---
+      auto pos = romPath.find_last_of("/\\");
+      std::string romName = (pos == std::string::npos) ? romPath : romPath.substr(pos + 1);
+      static char romArg[256];
+      std::snprintf(romArg, sizeof(romArg), "/xip/%s", romName.c_str());
+      run_nes(romArg);
   }
-
-  // Launch nofrendo with the XIP path and the rom name
-  auto pos = romPath.find_last_of("/\\");
-  std::string romName = (pos == std::string::npos) ? romPath : romPath.substr(pos + 1);
-  static char romArg[256];
-  std::snprintf(romArg, sizeof(romArg), "/xip/%s", romName.c_str());
-  char* argv[1] = { romArg };
-  nofrendo_main(1, argv);
+  else if (ext == ROM_TYPE_GAMEGEAR || ext == ROM_TYPE_SMS) {
+      // --- Master System / Game Gear ---
+      bool isGG = (ext == ROM_TYPE_GAMEGEAR);
+      run_sms(_get_rom_ptr(), _get_rom_size(), isGG);
+  }
+  else {
+      display.topBar("ERROR", false, false);
+      display.subMessage("Unsupported ROM type", 0);
+      while (1) delay(1000);
+  }
 }
 
 void loop() {
-  /* nofrendo_main is blocking */
+  /* run_emulator is blocking */
 }
