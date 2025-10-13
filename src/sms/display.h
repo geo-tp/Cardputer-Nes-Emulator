@@ -3,6 +3,7 @@
 
 extern bool fullscreen;
 extern bool scanline;
+extern int smsZoomPercent; 
 
 #ifdef __cplusplus
 extern "C" {
