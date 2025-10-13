@@ -128,7 +128,7 @@ void display_write_frame(const uint8_t *data[]) {
         display.pauseScreen();
 
         input.waitPress();
-        
+        delay(100); // this is so it can't do a pause-unpause stutter
         nes_togglepause();
     }
     
