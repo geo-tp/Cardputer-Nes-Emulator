@@ -1,3 +1,7 @@
+extern "C" {
+#include <nes/nes.h>
+}
+
 #include <M5Cardputer.h>
 
 extern bool fullscreenMode;
@@ -11,6 +15,8 @@ void controller_init() {
 
 uint32_t controller_read_input() {
     uint32_t value = 0xFFFFFFFF;
+
+    if (nes_pausestate()) return value; // block input while paused
 
     M5Cardputer.update();
     Keyboard_Class::KeysState status = M5Cardputer.Keyboard.keysState();
