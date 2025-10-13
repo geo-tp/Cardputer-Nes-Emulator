@@ -1,7 +1,7 @@
 #include <M5Cardputer.h>
 
 extern bool fullscreenMode;
-extern int zoomPercent;
+extern int nesZoomPercent;
 
 extern "C" {
 
@@ -19,11 +19,11 @@ uint32_t controller_read_input() {
     if (M5Cardputer.Keyboard.isChange() && M5Cardputer.Keyboard.isKeyPressed('\\')) {
         if (!fullscreenMode) {
             fullscreenMode = true;
-            zoomPercent = 100;
+            nesZoomPercent = 100;
         } else {
-            zoomPercent += 10;
-            if (zoomPercent > 150) {
-                zoomPercent = 100;
+            nesZoomPercent += 10;
+            if (nesZoomPercent > 150) {
+                nesZoomPercent = 100;
                 fullscreenMode = false;
             }
         }
@@ -33,15 +33,17 @@ uint32_t controller_read_input() {
 
     // Zoom in / out
     if (status.fn && M5Cardputer.Keyboard.isKeyPressed('/')) {
-        zoomPercent+= 1;
-        if (zoomPercent > 150) zoomPercent = 150;
+        if (!fullscreenMode) fullscreenMode = true;
+        nesZoomPercent+= 1;
+        if (nesZoomPercent > 150) nesZoomPercent = 150;
         return value;
 
     }
 
     if (status.fn && M5Cardputer.Keyboard.isKeyPressed(',')) {
-        zoomPercent-= 1;
-        if (zoomPercent < 100) zoomPercent = 100;
+        if (!fullscreenMode) fullscreenMode = true;
+        nesZoomPercent-= 1;
+        if (nesZoomPercent < 100) nesZoomPercent = 100;
         return value;
     }
 
