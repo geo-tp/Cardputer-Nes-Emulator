@@ -13,20 +13,55 @@
 // - Navigates folders with verticalSelector
 // - When a selected item is a nes file, returns its path
 
-static inline bool hasNesExt(const std::string& path) {
-    if (path.size() < 4) return false;
-    char a = (char)std::tolower((unsigned char)path[path.size()-4]);
-    char b = (char)std::tolower((unsigned char)path[path.size()-3]);
-    char c = (char)std::tolower((unsigned char)path[path.size()-2]);
-    char d = (char)std::tolower((unsigned char)path[path.size()-1]);
-    return (a=='.' && b=='n' && c=='e' && d=='s');
+enum RomType {
+    ROM_TYPE_UNKNOWN = 0,
+    ROM_TYPE_NES,
+    ROM_TYPE_SMS,
+    ROM_TYPE_GAMEGEAR
+};
+
+static inline bool hasRomExt(const std::string& path) {
+    if (path.size() < 3) return false;
+
+    size_t dotPos = path.find_last_of('.');
+    if (dotPos == std::string::npos) return false;
+
+    std::string ext = path.substr(dotPos + 1);
+
+    for (auto &ch : ext)
+        ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+
+    return (ext == "nes" || ext == "gg" || ext == "sms");
+}
+
+
+RomType getRomType(const std::string& path) {
+    if (path.empty()) return ROM_TYPE_UNKNOWN;
+
+    // find last dot
+    size_t dotPos = path.find_last_of('.');
+    if (dotPos == std::string::npos || dotPos + 1 >= path.size())
+        return ROM_TYPE_UNKNOWN;
+
+    // Extract the extension
+    std::string ext = path.substr(dotPos + 1);
+
+    // Convert to lowercase
+    for (auto& c : ext)
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+
+    if (ext == "nes") return ROM_TYPE_NES;
+    if (ext == "sms") return ROM_TYPE_SMS;
+    if (ext == "gg")  return ROM_TYPE_GAMEGEAR;
+
+    return ROM_TYPE_UNKNOWN;
 }
 
 static inline std::string getRomPath(SdService& sdService, CardputerView& display, CardputerInput& input) {
     VerticalSelector verticalSelector(display, input);
 
     display.initialize();
-    display.topBar("LOAD .nes ROM", false, false);
+    display.topBar("LOAD ROM CARTRIDGE", false, false);
     display.subMessage("Loading...", 0);
     if (!sdService.begin()) {
         display.subMessage("SD card not found", 2000);
@@ -82,9 +117,9 @@ static inline std::string getRomPath(SdService& sdService, CardputerView& displa
             continue;
         // file
         } else {
-            if (!hasNesExt(nextPath)) {
-                display.subMessage("file .nes required", 2000);
-                continue; // non .nes
+            if (!hasRomExt(nextPath)) {
+                display.subMessage(".sms .gg .nes required", 2000);
+                continue; // non rom file
             }
             return "/sd" + nextPath; // file selected
         }
