@@ -64,7 +64,7 @@ void CardputerView::welcome() {
     Display->drawRoundRect(10, 13, 215, 30, 5, PRIMARY_COLOR);
 
     // Title
-    std::string title = "NES Emulator 0.2";
+    std::string title = "Cardputer Emu 0.2";
     Display->setTextColor(TEXT_COLOR);
     Display->setTextSize(TEXT_BIG);
     Display->setCursor(getCenterOffset(title), 28);
@@ -83,12 +83,12 @@ void CardputerView::welcome() {
     Display->setTextColor(TEXT_COLOR);
 
     Display->setTextSize(TEXT_MEDIUM);
-    std::string l1 = "Cardputer Entertainment System";
+    std::string l1 = "NES - Gamegear - Master System";
     Display->setCursor(getCenterOffset(l1) + 1, boxY + 17);
     Display->printf("%s", l1.c_str());
 
     Display->setTextSize(TEXT_MEDIUM);
-    std::string l2 = "Use .nes uncompressed file";
+    std::string l2 = "Use rom uncompressed file";
     Display->setCursor(getCenterOffset(l2), boxY + 35);
     Display->printf("%s", l2.c_str());
 
