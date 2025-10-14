@@ -38,8 +38,12 @@
 #include "../log.h"
 #include "../osd.h"
 
+extern const uint8_t* _get_rom_ptr(void);
+extern size_t         _get_rom_size(void);
+extern void osd_set_sram_ptr(uint8_t *ptr, size_t len);
+
 /* Max length for displayed filename */
-#define ROM_DISP_MAXLEN 64
+#define ROM_DISP_MAXLEN 20
 
 #ifdef ZLIB
 #include <zlib.h>
@@ -137,6 +141,9 @@ static int rom_allocsram(rominfo_t *rominfo)
 
    /* make damn sure SRAM is clear */
    memset(rominfo->sram, 0, SRAM_BANK_LENGTH * rominfo->sram_banks);
+
+   /* Inform OSD about SRAM allocation */
+   osd_set_sram_ptr(rominfo->sram, (size_t)SRAM_BANK_LENGTH * rominfo->sram_banks);
    return 0;
 }
 
@@ -158,25 +165,55 @@ static int rom_loadrom(FILE *fp, rominfo_t *rominfo)
     ASSERT(fp);
     ASSERT(rominfo);
 
-      /* Streaming: we DO NOT load PRG/CHR into RAM.
-         - We advance the file cursor to validate the presence of the sections,
-         - We record chr_offset if CHR is present,
-         - We allocate VRAM if there is no CHR-ROM,
-         - We keep 'fp' open for on-demand reading. */
+    /* --- HACK XIP: if the ROM is mapped in flash, don't allocate anything, just point to it --- */
+    {
+        const uint8_t *xip = _get_rom_ptr();
+        size_t xsz = _get_rom_size();
+        if (xip && xsz >= 16) {
+            /* We assume the iNES header has already been read and that fp is positioned at the start of PRG */
+            long prg_off = ftell(fp);                  /* offset start PRG in the file */
+            size_t need_prg = (size_t)rominfo->rom_banks * ROM_BANK_LENGTH;
+            size_t need_chr = (size_t)rominfo->vrom_banks * VROM_BANK_LENGTH;
+            size_t need_all = prg_off + need_prg + need_chr;
 
-    if (rominfo->prg_size) {
-        if (fseek(fp, (long)rominfo->prg_size, SEEK_CUR) != 0) {
-            gui_sendmsg(GUI_RED, "Seek PRG failed");
-            return -1;
+            if ((size_t)prg_off <= xsz && need_all <= xsz) {
+                /* PRG mapped in XIP */
+                rominfo->rom = (uint8_t *)(xip + prg_off);
+                (void)fseek(fp, (long)need_prg, SEEK_CUR);
+
+                if (rominfo->vrom_banks) {
+                    /* CHR (VROM) mapped in XIP just after PRG */
+                    rominfo->vrom = (uint8_t *)(xip + prg_off + need_prg);
+                    (void)fseek(fp, (long)need_chr, SEEK_CUR);
+                } else {
+                    /* PRG mapped in XIP but no CHR */
+                    rominfo->vram = NOFRENDO_MALLOC(VRAM_LENGTH);
+                    if (NULL == rominfo->vram) {
+                        gui_sendmsg(GUI_RED, "Could not allocate space for VRAM");
+                        return -1;
+                    }
+                    memset(rominfo->vram, 0, VRAM_LENGTH);
+                }
+                return 0;
+            }
         }
     }
 
+    /* fallback RAM */
+    rominfo->rom = mem_alloc(rominfo->rom_banks * ROM_BANK_LENGTH, false);
+    if (NULL == rominfo->rom) {
+        gui_sendmsg(GUI_RED, "Could not allocate space for ROM image");
+        return -1;
+    }
+    _fread(rominfo->rom, ROM_BANK_LENGTH, rominfo->rom_banks, fp);
+
     if (rominfo->vrom_banks) {
-        rominfo->chr_offset = ftell(fp);
-        if (rominfo->chr_offset < 0) {
-            gui_sendmsg(GUI_RED, "ftell CHR failed");
+        rominfo->vrom = mem_alloc(rominfo->vrom_banks * VROM_BANK_LENGTH, false);
+        if (NULL == rominfo->vrom) {
+            gui_sendmsg(GUI_RED, "Could not allocate space for VROM");
             return -1;
         }
+        _fread(rominfo->vrom, VROM_BANK_LENGTH, rominfo->vrom_banks, fp);
     } else {
         rominfo->vram = NOFRENDO_MALLOC(VRAM_LENGTH);
         if (NULL == rominfo->vram) {
@@ -186,8 +223,6 @@ static int rom_loadrom(FILE *fp, rominfo_t *rominfo)
         memset(rominfo->vram, 0, VRAM_LENGTH);
     }
 
-    /* Keep the file pointer for later use */
-    rominfo->fp = fp;
     return 0;
 }
 
@@ -455,11 +490,6 @@ rominfo_t *rom_load(const char *filename, ppu_t *ppu)
    if (NULL != fp)
       rom_loadtrainer(fp, rominfo);
 
-   rominfo->prg_offset = ftell(fp);
-   rominfo->prg_size   = (size_t)rominfo->rom_banks  * ROM_BANK_LENGTH;  /* 0x4000 */
-   rominfo->chr_size   = (size_t)rominfo->vrom_banks * VROM_BANK_LENGTH; /* 0x2000 */
-   rominfo->streaming  = true;
-
    if (NULL == fp)
    {
       if (intro_get_rom(rominfo))
@@ -467,6 +497,10 @@ rominfo_t *rom_load(const char *filename, ppu_t *ppu)
    }
    else if (rom_loadrom(fp, rominfo))
       goto _fail;
+
+   /* Close the file */
+   if (NULL != fp)
+      _fclose(fp);
 
    rom_loadsram(rominfo);
 
@@ -478,12 +512,9 @@ rominfo_t *rom_load(const char *filename, ppu_t *ppu)
    return rominfo;
 
 _fail:
-   /* Close the file */
    if (NULL != fp)
-   {
       _fclose(fp);
-   }
-
+   rom_free(&rominfo);
    return NULL;
 }
 
@@ -494,11 +525,6 @@ void rom_free(rominfo_t **rominfo)
    {
       gui_sendmsg(GUI_GREEN, "ROM not loaded");
       return;
-   }
-
-   if ((*rominfo)->fp) {
-      _fclose((*rominfo)->fp);
-      (*rominfo)->fp = NULL;
    }
 
    /* Restore palette if we loaded in a VS jobber */
@@ -523,40 +549,6 @@ void rom_free(rominfo_t **rominfo)
    NOFRENDO_FREE(*rominfo);
 
    gui_sendmsg(GUI_GREEN, "ROM freed");
-}
-
-/* --- Helpers read PRG/CHR mappers --- */
-
-bool rom_read_prg_bank(rominfo_t *ri, int bank16k, void *dst)
-{
-   if (!ri || !ri->fp || !dst) return false;
-   if (bank16k < 0) return false;
-   size_t off = (size_t)bank16k * ROM_BANK_LENGTH;
-   if (off + ROM_BANK_LENGTH > ri->prg_size) return false;
-
-   if (fseek(ri->fp, ri->prg_offset + (long)off, SEEK_SET) != 0) return false;
-   return fread(dst, 1, ROM_BANK_LENGTH, ri->fp) == ROM_BANK_LENGTH;
-}
-
-bool rom_read_prg8k(rominfo_t *ri, int bank8k, void *dst)
-{
-   if (!ri || !ri->fp || !dst) return false;
-   if (bank8k < 0) return false;
-   size_t off = (size_t)bank8k * 0x2000;
-   if (off + 0x2000 > ri->prg_size) return false;
-
-   if (fseek(ri->fp, ri->prg_offset + (long)off, SEEK_SET) != 0) return false;
-   return fread(dst, 1, 0x2000, ri->fp) == 0x2000;
-}
-
-bool rom_read_chr_at(rominfo_t *ri, size_t offset, void *dst, size_t len)
-{
-   if (!ri || !ri->fp || !dst || len == 0) return false;
-   if (ri->chr_size == 0) return false;           /* CHR-RAM */
-   if (offset + len > ri->chr_size) return false;
-
-   if (fseek(ri->fp, ri->chr_offset + (long)offset, SEEK_SET) != 0) return false;
-   return fread(dst, 1, len, ri->fp) == len;
 }
 
 /*
