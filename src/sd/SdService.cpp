@@ -11,9 +11,13 @@ bool SdService::begin() {
     );
     delay(10);
 
-    if (!SD.begin(SD_CS, sdCardSPI)) {
-        sdCardMounted = false;
-        return false;
+    // find best speed
+    const uint32_t speeds[] = { 40000000u, 20000000u };
+    for (uint32_t hz : speeds) {
+        if (SD.begin(SD_CS, sdCardSPI, hz, "/sd")) {
+            sdCardMounted = true;
+            return true;
+        }
     }
 
     sdCardMounted = true;
@@ -48,45 +52,56 @@ bool SdService::getSdState() {
 }
 
 std::vector<std::string> SdService::listElements(const std::string& dirPath, size_t limit) {
-    if (limit == 0) {
-        limit = 512; // Default limit
-    }
+    if (limit == 0) limit = 2048;
 
     std::vector<std::string> filesList;
     std::vector<std::string> foldersList;
+    filesList.reserve(256);
+    foldersList.reserve(64);
 
-    if (!sdCardMounted) {
-        return filesList;
-    }
+    if (!sdCardMounted) return filesList;
 
     File dir = SD.open(dirPath.c_str());
-    if (!dir || !dir.isDirectory()) {
-        return filesList;
-    }
+    if (!dir || !dir.isDirectory()) return filesList;
 
-    File file = dir.openNextFile();
+    dir.setBufferSize(1024);
+    dir.rewindDirectory();
+
     size_t i = 0;
-    while (file) {
-        if (file.name()[0] != '.') {  // Exclude hidden files
-            if (file.isDirectory()) {
-                foldersList.push_back(file.name());
-            } else {
-                filesList.push_back(file.name());
-            }
-            i++;
+    while (true) {
+        bool isDir = false;
+        String sname = dir.getNextFileName(&isDir);
+        if (!sname.length()) break;
+
+        const char* p = sname.c_str();
+        size_t len = sname.length();
+
+        // erase trailing '/'
+        if (len && p[len - 1] == '/') --len;
+
+        size_t start = 0;
+        for (size_t k = len; k > 0; --k) {
+            if (p[k - 1] == '/') { start = k; break; }
         }
 
-        if (i > limit) {
-            break;
-        }
+        size_t namelen = (len > start) ? (len - start) : 0;
+        if (namelen == 0) continue;
 
-        file = dir.openNextFile();
+        // ignore hidden files
+        if (p[start] == '.') continue;
+
+        // push to the right list
+        if (isDir) foldersList.emplace_back(p + start, namelen);
+        else       filesList.emplace_back(p + start, namelen);
+
+        if (++i >= limit) break;
     }
+
+    dir.close();
 
     std::sort(foldersList.begin(), foldersList.end());
     std::sort(filesList.begin(), filesList.end());
     foldersList.insert(foldersList.end(), filesList.begin(), filesList.end());
-
     return foldersList;
 }
 
@@ -176,11 +191,6 @@ bool SdService::deleteFile(const std::string& filePath) {
     return false;
 }
 
-bool SdService::validateVaultFile(const std::string& filePath) {
-    // Vérifie si l'extension correspond à un fichier de coffre
-    return getFileExt(filePath) == "vault";
-}
-
 std::string SdService::getFileExt(const std::string& path) {
     size_t pos = path.find_last_of('.');
     return (pos != std::string::npos && pos < path.length() - 1) ? path.substr(pos + 1) : "";
@@ -192,26 +202,27 @@ std::string SdService::getParentDirectory(const std::string& path) {
 }
 
 std::vector<std::string> SdService::getCachedDirectoryElements(const std::string& path) {
-    if (cachedDirectoryElements.find(path) != cachedDirectoryElements.end()) {
-        return cachedDirectoryElements[path];
-    }
+    // if (cachedDirectoryElements.find(path) != cachedDirectoryElements.end()) {
+    //     return cachedDirectoryElements[path];
+    // }
 
-    std::vector<std::string> elements = listElements(path);
-    if (elements.size() > 4) {
-        if (cachedDirectoryElements.size() >= 64) {
-            cachedDirectoryElements.erase(cachedDirectoryElements.begin());
-        }
-        cachedDirectoryElements[path] = elements;
-    }
-    return elements;
+    // std::vector<std::string> elements = listElements(path);
+    // if (elements.size() > 4) {
+    //     if (cachedDirectoryElements.size() >= 64) {
+    //         cachedDirectoryElements.erase(cachedDirectoryElements.begin());
+    //     }
+    //     cachedDirectoryElements[path] = elements;
+    // }
+    // return elements;
+    return listElements(path); // We dont rly need caching anymore
 }
 
 void SdService::setCachedDirectoryElements(const std::string& path, const std::vector<std::string>& elements) {
-    cachedDirectoryElements[path] = elements;
+    // cachedDirectoryElements[path] = elements; // We dont rly need this anymore
 }
 
 void SdService::removeCachedPath(const std::string& path) {
-    cachedDirectoryElements.erase(path);
+    // cachedDirectoryElements.erase(path); // We dont rly need this anymore
 }
 
 std::string SdService::getFileName(const std::string& path) {
