@@ -1,17 +1,17 @@
-# NES Emulator for M5Stack Cardputer
+# Emulators for M5Stack Cardputer
 
-![Nes Emulator screen captures on the M5Stack Cardputer](nes_emulator_s.jpg)
+![Emulator screen captures on the M5Stack Cardputer](nes_emulator_s.jpg)
 
-Powered by [Nofrendo](https://github.com/moononournation/arduino-nofrendo). **A full-speed NES emulator running on the M5Stack Cardputer**, with sound, video, save, and gamepad controls.
+Powered by [Nofrendo](https://github.com/moononournation/arduino-nofrendo) and **Smsplus**. **NES, Game Gear and Master System emulators running on the M5Stack Cardputer**, with sound, video, save, and gamepad controls.
 
-It runs **.nes ROM files directly from the SD**, simply browse and select the game you want to play.
-**Make sure your ROMs are uncompressed** (.nes only — not .zip, .7z, or .rar).
+It runs **`.nes` `.gg` `.sms` ROM files directly from the SD**, simply browse and select the game you want to play.
+**Make sure your ROMs are uncompressed** (.nes .gg .sms only — not .zip, .7z, or .rar).
 
-**All games are supported**, save files are stored on the SD card in the `nes_saves` folder.
+**All games are supported**, for NES, save files are stored on the SD card in the `nes_saves` folder.
 
 ## Controls
 
-The built-in **Cardputer keyboard** is used for all NES controls: 
+The built-in **Cardputer keyboard** is used for all controls: 
 
 | NES Function | Cardputer Key | Description |
 |---------------|---------------|-------------|
@@ -28,12 +28,13 @@ The built-in **Cardputer keyboard** is used for all NES controls:
 | 🔊 Volume + | **+** | Increase audio volume |
 | 🔊 Volume − | **-** | Decrease audio volume |
 | 🖥️ Screen Mode | **\\** | Toggle screen display mode |
+| 🔘 Quit Game | **G0 (hold 1 s)** | Go back to menu |
 
 **Note:** `fn` + `arrows` keys are also binded for zoom/sound controls. The `j` key is also bound as Button A to allow an alternative layout for player preference.
 
 ## Zoom Mode
 
-The Zoom Mode allows you to **dynamically adjust the display scale of NES games** on the Cardputer’s screen.
+The Zoom Mode allows you to **dynamically adjust the display scale of games** on the Cardputer’s screen.
 
 By pressing `/`, you can toggle between **multiple zoom levels (100 to 150%),  fullscreen or 4/3**. This flexibility ensures that each game looks its best on the Cardputer’s compact display.
 
@@ -49,16 +50,11 @@ You can precisely adjust the display zoom level with `fn` + `arrows left/right`.
 
 ## About Games
 
-All games  `.nes` from the **official NES catalog** should be **fully supported** and run at **full speed**. You can place the ROM files anywhere on your SD card and select them.
+All games  `.nes` `.gg` `.sms` games should be **supported** and run at **full speed**. You can place the ROM files anywhere on your SD card and select them.
 
 ✅ Expected behavior:
 - Smooth 60 FPS gameplay  
 - Accurate sound emulation  
-- SD save/load functionality
+- SD save/load functionality (NES)
 
-You can pic any `.nes` file from your SD using the file browser. When browsing your game list, you can **type the first few letters of a game’s name** to jump directly to it. This makes it much faster to find a specific title, especially when your library contains dozens of entries. You should **avoid game titles longer than 64 characters**.
-
-Games are loaded from the SD cards with **slow I/O performance**, it’s strongly recommended **not to put hundreds of game files in the same directory**.  
-Large directories can drastically increase load time for rom selection, or even make the file browsers unresponsive (limit 512 files per folder).
-
-To ensure smooth navigation and faster access, **organize your games into smaller folders**, each containing **fewer than 100 files** whenever possible.  
+You can pic any file from your SD using the file browser. When browsing your game list, you can **type the first few letters of a game’s name** to jump directly to it. This makes it much faster to find a specific title, especially when your library contains dozens of entries. You should **avoid game titles longer than 64 characters**.
