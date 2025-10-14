@@ -34,7 +34,7 @@ TimerHandle_t nes_timer;
 static uint8_t *fb = NULL;       /* framebuffer 8bpp */
 static bitmap_t *myBitmap = NULL;
 bool fullscreenMode = true;
-int zoomPercent = 115;          /* 100% = fullscreen, 110% to 150% = zoom */
+int nesZoomPercent = 115;          /* 100% = fullscreen, 110% to 150% = zoom */
 
 #define FB_WIDTH    NES_SCREEN_WIDTH     /* 256 */
 #define FB_HEIGHT   256                  /* surallocate */

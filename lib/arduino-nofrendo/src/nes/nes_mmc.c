@@ -50,34 +50,6 @@
 #define MMC_LAST2KVROM (MMC_2KVROM - 1)
 #define MMC_LAST1KVROM (MMC_1KVROM - 1)
 
-#include "nes_rom.h"
-
-/* PRG 16 KiB */
-static uint8 prg_win16_a[0x4000]; /* 0x4000 */
-static uint8 prg_win16_b[0x4000]; /* 0x4000 */
-static int   prg16_bank_a = -1;
-static int   prg16_bank_b = -1;
-
-/* CHR 8 KiB window for PPU ($0000-$1FFF) */
-static uint8 chr_win8k[0x2000];  /* 0x2000 */
-static int   chr8_bank = -1;
-
-/* PRG 8 KiB windows — one buffer per 8K slot */
-static uint8 prg_win8_8000[0x2000];
-static uint8 prg_win8_A000[0x2000];
-static uint8 prg_win8_C000[0x2000];
-static uint8 prg_win8_E000[0x2000];
-static int   prg8_bank_8000 = -1;
-static int   prg8_bank_A000 = -1;
-static int   prg8_bank_C000 = -1;
-static int   prg8_bank_E000 = -1;
-
-/* CHR 4 KiB windows for PPU ($0000-$0FFF and $1000-$1FFF) */
-static uint8 chr_win4k_a[0x1000];
-static uint8 chr_win4k_b[0x1000];
-static int   chr4_bank_a = -1;
-static int   chr4_bank_b = -1;
-
 static mmc_t mmc;
 
 rominfo_t *mmc_getinfo(void)
@@ -103,293 +75,89 @@ void mmc_bankvrom(int size, uint32 address, int bank)
    if (0 == mmc.cart->vrom_banks)
       return;
 
-   if (mmc.cart->streaming) {
-      /* --- Buffer composite --- */
-      static uint8 chr_comp8k[0x2000];
-      static int   chr_initialized = 0;
+   switch (size)
+   {
+   case 1:
+      if (bank == MMC_LASTBANK)
+         bank = MMC_LAST1KVROM;
+      ppu_setpage(1, address >> 10, &mmc.cart->vrom[(bank % MMC_1KVROM) << 10] - address);
+      break;
 
-      /* Taille totale*/
-      const size_t chr_total_bytes = (size_t)mmc.cart->vrom_banks * 0x2000;
+   case 2:
+      if (bank == MMC_LASTBANK)
+         bank = MMC_LAST2KVROM;
+      ppu_setpage(2, address >> 10, &mmc.cart->vrom[(bank % MMC_2KVROM) << 11] - address);
+      break;
 
-      /* safe reading */
-      #define READ_CHR_SAFE(src_off, dst, len)                                         \
-         do {                                                                          \
-            if ((src_off) + (len) > chr_total_bytes) {                                 \
-               /* hors bornes  */                                                      \
-               memset((dst), 0x00, (len));                                             \
-               nofrendo_log_printf("WARN CHR OOB req off=0x%zx len=0x%zx tot=0x%zx\n", \
-                                    (size_t)(src_off), (size_t)(len), chr_total_bytes);\
-            } else if (!rom_read_chr_at(mmc.cart, (src_off), (dst), (len))) {          \
-               memset((dst), 0x00, (len));                                             \
-               nofrendo_log_printf("WARN CHR read fail off=0x%zx len=0x%zx\n",         \
-                                    (size_t)(src_off), (size_t)(len));                 \
-            }                                                                          \
-         } while (0)
+   case 4:
+      if (bank == MMC_LASTBANK)
+         bank = MMC_LAST4KVROM;
+      ppu_setpage(4, address >> 10, &mmc.cart->vrom[(bank % MMC_4KVROM) << 12] - address);
+      break;
 
-      /* Init  buffer composite */
-      if (!chr_initialized) {
-         /* charge banque 0 full */
-         READ_CHR_SAFE(0, chr_comp8k, 0x2000);
-         chr_initialized = 1;
-         ppu_setpage(8, 0, chr_comp8k);
-      }
+   case 8:
+      if (bank == MMC_LASTBANK)
+         bank = MMC_LAST8KVROM;
+      ppu_setpage(8, 0, &mmc.cart->vrom[(bank % MMC_8KVROM) << 13]);
+      break;
 
-      switch (size)
-      {
-      case 8: { /* CHR 8K ($0000-$1FFF) */
-         int eff = (bank == MMC_LASTBANK) ? MMC_LAST8KVROM : (bank % MMC_8KVROM);
-         size_t src_off = (size_t)eff << 13; /* * 0x2000 */
-         READ_CHR_SAFE(src_off, chr_comp8k, 0x2000);
-         ppu_setpage(8, 0, chr_comp8k);
-
-         nofrendo_log_printf(
-         "[CHR8 ] map @%04X req=%d eff=%d src=0x%06lX\n",
-         (unsigned)address, bank, eff, (unsigned long)src_off
-         );
-         return;
-      }
-
-      case 4: { /* CHR 4K ($0000 ou $1000) */
-         /* slot A = $0000..$0FFF, slot B = $1000..$1FFF */
-
-         if (bank == MMC_LASTBANK)
-               bank = MMC_LAST4KVROM;
-         int eff = bank % MMC_4KVROM;
-
-         uint8 *dst;
-         int   *cur_bank;
-         int slot = (address >= 0x1000) ? 1 : 0;
-         if (slot) { dst = chr_win4k_b; cur_bank = &chr4_bank_b; }
-         else      { dst = chr_win4k_a; cur_bank = &chr4_bank_a; }
-
-         if (*cur_bank != eff) {
-               size_t off = (size_t)eff << 12; /* eff * 0x1000 */
-               if (!rom_read_chr_at(mmc.cart, off, dst, 0x1000)) {
-                  memset(dst, 0x00, 0x1000);
-                  nofrendo_log_printf("WARN mmc_bankvrom(4): read CHR4K bank %d failed -> 0x00\n", eff);
-               }
-               *cur_bank = eff;
-         }
-
-         ppu_setpage(4, address >> 10, dst - (int)address);
-         break;
-      }
-
-      case 2: { /* CHR 2K (MMC3) */
-         int eff = (bank == MMC_LASTBANK) ? MMC_LAST2KVROM : (bank % MMC_2KVROM);
-         size_t dst_off = (size_t)(address & 0x1FFF);
-         dst_off &= ~0x7FF;                    /* align 2K (0x800) */
-         if (dst_off > 0x1800) dst_off = 0x1800;
-         size_t src_off = (size_t)eff << 11;   /* * 0x800 */
-         READ_CHR_SAFE(src_off, chr_comp8k + dst_off, 0x800);
-         ppu_setpage(8, 0, chr_comp8k);
-
-         nofrendo_log_printf(
-         "[CHR2 ] map @%04X req=%d eff=%d dst=0x%04X src=0x%06lX\n",
-         (unsigned)address, bank, eff, (unsigned)dst_off, (unsigned long)src_off
-         );
-         return;
-      }
-
-      case 1: { /* CHR 1K (MMC3) */
-         int eff = (bank == MMC_LASTBANK) ? MMC_LAST1KVROM : (bank % MMC_1KVROM);
-         size_t dst_off = (size_t)(address & 0x1FFF);
-         dst_off &= ~0x3FF;                    /* align 1K (0x400) */
-         if (dst_off > 0x1C00) dst_off = 0x1C00;
-         size_t src_off = (size_t)eff << 10;   /* * 0x400 */
-         READ_CHR_SAFE(src_off, chr_comp8k + dst_off, 0x400);
-         ppu_setpage(8, 0, chr_comp8k);
-
-         nofrendo_log_printf(
-         "[CHR1 ] map @%04X req=%d eff=%d dst=0x%04X src=0x%06lX\n",
-         (unsigned)address, bank, eff, (unsigned)dst_off, (unsigned long)src_off
-         );
-         return;
-      }
-
-      default:
-         nofrendo_log_printf("invalid VROM bank size %d (stream)\n", size);
-         return;
-      }
+   default:
+      nofrendo_log_printf("invalid VROM bank size %d\n", size);
    }
 }
 
 /* ROM bankswitching */
 void mmc_bankrom(int size, uint32 address, int bank)
 {
-    nes6502_context mmc_cpu;
-    nes6502_getcontext(&mmc_cpu);
+   nes6502_context mmc_cpu;
 
-    static int   prg16_bank_a = -1;
-    static int   prg16_bank_b = -1;
+   nes6502_getcontext(&mmc_cpu);
 
-    static uint8 prg_win8[0x2000];
-    static int   prg8_bank = -1;
+   switch (size)
+   {
+   case 8:
+      if (bank == MMC_LASTBANK)
+         bank = MMC_LAST8KROM;
+      {
+         int page = address >> NES6502_BANKSHIFT;
+         mmc_cpu.mem_page[page] = &mmc.cart->rom[(bank % MMC_8KROM) << 13];
+         mmc_cpu.mem_page[page + 1] = mmc_cpu.mem_page[page] + 0x1000;
+      }
 
-    if (mmc.cart && mmc.cart->streaming)
-    {
-        const int have16 = (mmc.cart->rom_banks > 0);
-        const int have32 = (mmc.cart->rom_banks >= 2);
+      break;
 
-        switch (size)
-        {
-        case 16:
-        {
-            if (!have16) {
-                memset(prg_win16_a, 0xFF, sizeof(prg_win16_a));
-                int page = address >> NES6502_BANKSHIFT;
-                mmc_cpu.mem_page[page + 0] = prg_win16_a + 0x0000;
-                mmc_cpu.mem_page[page + 1] = prg_win16_a + 0x1000;
-                mmc_cpu.mem_page[page + 2] = prg_win16_a + 0x2000;
-                mmc_cpu.mem_page[page + 3] = prg_win16_a + 0x3000;
-                nofrendo_log_printf("mmc_bankrom(16): no PRG available, mapped 0xFF stub\n");
-                break;
-            }
+   case 16:
+      if (bank == MMC_LASTBANK)
+         bank = MMC_LAST16KROM;
+      {
+         int page = address >> NES6502_BANKSHIFT;
+         mmc_cpu.mem_page[page] = &mmc.cart->rom[(bank % MMC_16KROM) << 14];
+         mmc_cpu.mem_page[page + 1] = mmc_cpu.mem_page[page] + 0x1000;
+         mmc_cpu.mem_page[page + 2] = mmc_cpu.mem_page[page] + 0x2000;
+         mmc_cpu.mem_page[page + 3] = mmc_cpu.mem_page[page] + 0x3000;
+      }
+      break;
 
-            if (bank == MMC_LASTBANK) bank = MMC_LAST16KROM;
+   case 32:
+      if (bank == MMC_LASTBANK)
+         bank = MMC_LAST32KROM;
 
-            int page = address >> NES6502_BANKSHIFT;
-            uint8 *dst;
-            int   *cur_bank;
+      mmc_cpu.mem_page[8] = &mmc.cart->rom[(bank % MMC_32KROM) << 15];
+      mmc_cpu.mem_page[9] = mmc_cpu.mem_page[8] + 0x1000;
+      mmc_cpu.mem_page[10] = mmc_cpu.mem_page[8] + 0x2000;
+      mmc_cpu.mem_page[11] = mmc_cpu.mem_page[8] + 0x3000;
+      mmc_cpu.mem_page[12] = mmc_cpu.mem_page[8] + 0x4000;
+      mmc_cpu.mem_page[13] = mmc_cpu.mem_page[8] + 0x5000;
+      mmc_cpu.mem_page[14] = mmc_cpu.mem_page[8] + 0x6000;
+      mmc_cpu.mem_page[15] = mmc_cpu.mem_page[8] + 0x7000;
+      break;
 
-            if (address >= 0xC000) { dst = prg_win16_b; cur_bank = &prg16_bank_b; }
-            else                   { dst = prg_win16_a; cur_bank = &prg16_bank_a; }
+   default:
+      nofrendo_log_printf("invalid ROM bank size %d\n", size);
+      break;
+   }
 
-            int eff = bank % MMC_16KROM;
-            if (*cur_bank != eff) {
-                if (!rom_read_prg_bank(mmc.cart, eff, dst)) {
-                    memset(dst, 0xFF, 0x4000);
-                    nofrendo_log_printf("WARN mmc_bankrom(16): read PRG bank %d failed -> 0xFF\n", eff);
-                }
-                *cur_bank = eff;
-            }
-
-            mmc_cpu.mem_page[page + 0] = dst + 0x0000;
-            mmc_cpu.mem_page[page + 1] = dst + 0x1000;
-            mmc_cpu.mem_page[page + 2] = dst + 0x2000;
-            mmc_cpu.mem_page[page + 3] = dst + 0x3000;
-            break;
-        }
-
-        case 32:
-        {
-            if (!have32) {
-                if (have16) {
-                    if (prg16_bank_a != 0) {
-                        if (!rom_read_prg_bank(mmc.cart, 0, prg_win16_a))
-                            memset(prg_win16_a, 0xFF, sizeof(prg_win16_a));
-                        prg16_bank_a = 0;
-                    }
-                    memcpy(prg_win16_b, prg_win16_a, 0x4000);
-                    prg16_bank_b = 1;
-
-                    mmc_cpu.mem_page[8]  = prg_win16_a + 0x0000;
-                    mmc_cpu.mem_page[9]  = prg_win16_a + 0x1000;
-                    mmc_cpu.mem_page[10] = prg_win16_a + 0x2000;
-                    mmc_cpu.mem_page[11] = prg_win16_a + 0x3000;
-
-                    mmc_cpu.mem_page[12] = prg_win16_b + 0x0000;
-                    mmc_cpu.mem_page[13] = prg_win16_b + 0x1000;
-                    mmc_cpu.mem_page[14] = prg_win16_b + 0x2000;
-                    mmc_cpu.mem_page[15] = prg_win16_b + 0x3000;
-                    nofrendo_log_printf("mmc_bankrom(32): fallback single 16K\n");
-                    break;
-                }
-
-                memset(prg_win16_a, 0xFF, sizeof(prg_win16_a));
-                memset(prg_win16_b, 0xFF, sizeof(prg_win16_b));
-                mmc_cpu.mem_page[8]  = prg_win16_a + 0x0000;
-                mmc_cpu.mem_page[9]  = prg_win16_a + 0x1000;
-                mmc_cpu.mem_page[10] = prg_win16_a + 0x2000;
-                mmc_cpu.mem_page[11] = prg_win16_a + 0x3000;
-                mmc_cpu.mem_page[12] = prg_win16_b + 0x0000;
-                mmc_cpu.mem_page[13] = prg_win16_b + 0x1000;
-                mmc_cpu.mem_page[14] = prg_win16_b + 0x2000;
-                mmc_cpu.mem_page[15] = prg_win16_b + 0x3000;
-                nofrendo_log_printf("mmc_bankrom(32): no PRG available, mapped 0xFF stub\n");
-                break;
-            }
-
-            if (bank == MMC_LASTBANK) bank = MMC_LAST32KROM;
-            int base_bank16 = (bank % MMC_32KROM) * 2;
-
-            if (prg16_bank_a != base_bank16) {
-                if (!rom_read_prg_bank(mmc.cart, base_bank16, prg_win16_a)) {
-                    memset(prg_win16_a, 0xFF, sizeof(prg_win16_a));
-                    nofrendo_log_printf("WARN mmc_bankrom(32): read PRG bank %d failed -> 0xFF\n", base_bank16);
-                }
-                prg16_bank_a = base_bank16;
-            }
-            if (prg16_bank_b != base_bank16 + 1) {
-                if (!rom_read_prg_bank(mmc.cart, base_bank16 + 1, prg_win16_b)) {
-                    memset(prg_win16_b, 0xFF, sizeof(prg_win16_b));
-                    nofrendo_log_printf("WARN mmc_bankrom(32): read PRG bank %d failed -> 0xFF\n", base_bank16 + 1);
-                }
-                prg16_bank_b = base_bank16 + 1;
-            }
-
-            mmc_cpu.mem_page[8]  = prg_win16_a + 0x0000;
-            mmc_cpu.mem_page[9]  = prg_win16_a + 0x1000;
-            mmc_cpu.mem_page[10] = prg_win16_a + 0x2000;
-            mmc_cpu.mem_page[11] = prg_win16_a + 0x3000;
-            mmc_cpu.mem_page[12] = prg_win16_b + 0x0000;
-            mmc_cpu.mem_page[13] = prg_win16_b + 0x1000;
-            mmc_cpu.mem_page[14] = prg_win16_b + 0x2000;
-            mmc_cpu.mem_page[15] = prg_win16_b + 0x3000;
-            break;
-        }
-
-         case 8:
-         {
-            if (bank == MMC_LASTBANK) bank = MMC_LAST8KROM;
-            if (MMC_8KROM <= 0) {
-               static uint8 stub8[0x2000];
-               int page = (int)(address >> NES6502_BANKSHIFT);
-               memset(stub8, 0xFF, sizeof(stub8));
-               mmc_cpu.mem_page[page+0] = stub8 + 0x0000;
-               mmc_cpu.mem_page[page+1] = stub8 + 0x1000;
-               break;
-            }
-
-            int eff = bank % MMC_8KROM;
-            uint8 *buf; int *cur;
-
-            if      (address >= 0xE000) { buf = prg_win8_E000; cur = &prg8_bank_E000; }
-            else if (address >= 0xC000) { buf = prg_win8_C000; cur = &prg8_bank_C000; }
-            else if (address >= 0xA000) { buf = prg_win8_A000; cur = &prg8_bank_A000; }
-            else                        { buf = prg_win8_8000; cur = &prg8_bank_8000; }
-
-            if (*cur != eff) {
-               if (!rom_read_prg8k(mmc.cart, eff, buf)) {
-                     memset(buf, 0xFF, 0x2000);
-                     nofrendo_log_printf("WARN PRG8 read bank %d fail -> 0xFF\n", eff);
-               }
-               *cur = eff;
-            }
-
-            int page = (int)(address >> NES6502_BANKSHIFT);
-            mmc_cpu.mem_page[page+0] = buf + 0x0000;
-            mmc_cpu.mem_page[page+1] = buf + 0x1000;
-
-            nofrendo_log_printf(
-            "[PRG8] map @%04X slot=%c req=%d eff=%d page=%d\n",
-            (unsigned)address,
-            (address >= 0xE000) ? 'E' : (address >= 0xC000) ? 'C' : (address >= 0xA000) ? 'A' : '8',
-            bank,
-            eff,
-            (int)(address >> NES6502_BANKSHIFT)
-            );
-            break;
-         }
-
-        default:
-            nofrendo_log_printf("invalid ROM bank size %d\n", size);
-            break;
-        }
-
-        nes6502_setcontext(&mmc_cpu);
-        return;
-    }
+   nes6502_setcontext(&mmc_cpu);
 }
 
 /* Check to see if this mapper is supported */

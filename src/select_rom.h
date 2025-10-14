@@ -57,19 +57,21 @@ RomType getRomType(const std::string& path) {
     return ROM_TYPE_UNKNOWN;
 }
 
-static inline std::string getRomPath(SdService& sdService, CardputerView& display, CardputerInput& input) {
+static inline std::string getRomPath(SdService& sdService, CardputerView& display, CardputerInput& input, const std::string& initialFolder = "/", bool skipWelcome = false) {
     VerticalSelector verticalSelector(display, input);
 
     display.initialize();
-    display.topBar("LOAD ROM CARTRIDGE", false, false);
-    display.subMessage("Loading...", 0);
+    if (!skipWelcome) {
+        display.topBar("LOAD ROM CARTRIDGE", false, false);
+        display.subMessage(".nes .gg .sms files", 500);
+    }
     if (!sdService.begin()) {
         display.subMessage("SD card not found", 2000);
         return "";
     }
     input.flushInput(1000); // avoid double tap, flush any previous input
 
-    std::string currentPath = "/";
+    std::string currentPath = initialFolder.empty() ? "/" : initialFolder;
     std::vector<std::string> elementNames;
 
     while (true) {
@@ -125,6 +127,5 @@ static inline std::string getRomPath(SdService& sdService, CardputerView& displa
         }
     }
 
-    sdService.close();
     return "";
 }

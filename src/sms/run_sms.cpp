@@ -13,12 +13,8 @@
 void run_sms(const uint8_t* romPtr, size_t romLen, bool isGG)
 {
   CardputerView display;
-  display.initialize();
-  display.topBar("PRESS ANY KEY TO START", false, false);
-  display.showKeymapping();
-
   CardputerInput input;
-  input.waitPress();
+  display.initialize();
 
   // Buffers video & SRAM
   uint8_t* videoBuf = (uint8_t*)heap_caps_aligned_alloc(
@@ -39,6 +35,7 @@ void run_sms(const uint8_t* romPtr, size_t romLen, bool isGG)
   cart.rom   = (uint8_t*)romPtr;
   cart.pages = (romLen + 0x3FFF) / 0x4000;
   cart.type  = isGG ? TYPE_GG : TYPE_SMS;
+  smsZoomPercent = isGG ? 100 : 110;
 
   emu_system_init(22050);
   system_reset();
@@ -54,21 +51,56 @@ void run_sms(const uint8_t* romPtr, size_t romLen, bool isGG)
   bool lastToggle = fullscreen;
   uint32_t frameCount = 0;
   uint32_t lastFpsTime = millis();
+  float avgFrameTime = 0;
+  float avgFrameTimeRT = 0;
   float accFrameUs = 0.f;
+
+  const uint32_t TARGET_US = 16667; // 60 Hz
 
   for (;;) {
     uint32_t t0 = micros();
 
-    sms_frame(0); // emule 1 frame
-
-    // Toggle fullscreen
+    sms_frame(0);
     if (lastToggle != fullscreen) {
       lastToggle = fullscreen;
       if (fullscreen) video_compute_scaler_full();
       else            video_compute_scaler_square();
     }
-
-    cardputer_read_input();
+    cardputer_read_input(isGG);
     sms_display_write_frame();
+
+
+    uint32_t emuUs = micros() - t0;
+
+    // Pacing 60 Hz
+    int32_t remaining = (int32_t)TARGET_US - (int32_t)emuUs;
+    if (remaining > 0) {
+      delayMicroseconds((uint32_t)remaining);
+    }
+
+    // Realtime
+    uint32_t frameUs = micros() - t0;
+
+    // Stats
+    avgFrameTime += emuUs;      // perf brute
+    avgFrameTimeRT += frameUs;  // FPS effectif
+    frameCount++;
+
+    if (millis() - lastFpsTime >= 1000) {
+      float avgRaw = avgFrameTime / frameCount;
+      float fpsRaw = 1000000.0f / avgRaw;
+      float speedPct = (fpsRaw / 60.0f) * 100.0f;
+
+      float avgRT = avgFrameTimeRT / frameCount;
+      float fpsRT = 1000000.0f / avgRT;
+
+      printf("[Perf] raw=%.1f us (%.1f fps, %.1f%%) | realtime=%.1f us (%.2f fps)\n",
+            avgRaw, fpsRaw, speedPct, avgRT, fpsRT);
+
+      avgFrameTime = 0;
+      avgFrameTimeRT = 0;
+      frameCount = 0;
+      lastFpsTime = millis();
+    }
   }
 }

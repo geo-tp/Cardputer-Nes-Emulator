@@ -5,6 +5,24 @@ M5GFX* CardputerView::Display = nullptr;
 
 void CardputerView::initialize() {
     Display = &M5Cardputer.Display;
+
+    // Boost M5GFX SPI
+    auto* panel = Display->panel();
+    if (panel) {
+        auto* bus = (lgfx::Bus_SPI*)panel->bus();
+        if (bus) {
+            auto bcfg = bus->config();
+            bcfg.freq_write  = 80000000;  // 80 MHz
+            bcfg.freq_read   = 20000000;  // read, not critical
+            bcfg.dma_channel = 1;         // DMA
+            bus->config(bcfg);
+        }
+
+        auto pcfg = panel->config();
+        pcfg.bus_shared = true;
+        panel->config(pcfg);
+    }
+
     Display->setRotation(1);
     Display->setTextColor(TEXT_COLOR);
     Display->fillScreen(BACKGROUND_COLOR);
@@ -60,8 +78,8 @@ void CardputerView::showKeymapping() {
 void CardputerView::welcome() {
     // Background & title frame
     Display->fillScreen(BACKGROUND_COLOR);
-    Display->fillRoundRect(10, 13, 215, 30, 5, RECT_COLOR_DARK);
-    Display->drawRoundRect(10, 13, 215, 30, 5, PRIMARY_COLOR);
+    Display->fillRoundRect(10, 13, 217, 30, 5, RECT_COLOR_DARK);
+    Display->drawRoundRect(10, 13, 217, 30, 5, PRIMARY_COLOR);
 
     // Title
     std::string title = "Cardputer Emu 0.2";
@@ -79,15 +97,29 @@ void CardputerView::welcome() {
     Display->fillRoundRect(boxX, boxY, boxW, boxH, DEFAULT_ROUND_RECT, RECT_COLOR_DARK);
     Display->drawRoundRect(boxX, boxY, boxW, boxH, DEFAULT_ROUND_RECT, PRIMARY_COLOR);
 
-    // Messages
+    Display->setTextSize(TEXT_MEDIUM);
+    // Ligne consoles (multicolore)
+    int y = boxY + 17;
+    int x = getCenterOffset("NES - Game Gear - Master System");
+
+    Display->setCursor(x, y);
+    Display->setTextColor(NES_COLOR);
+    Display->print("NES");
+
     Display->setTextColor(TEXT_COLOR);
+    Display->print(" - ");
+
+    Display->setTextColor(GAMEGEAR_COLOR);
+    Display->print("Game Gear");
+
+    Display->setTextColor(TEXT_COLOR);
+    Display->print(" - ");
+
+    Display->setTextColor(SMS_COLOR);
+    Display->print("Master System");
 
     Display->setTextSize(TEXT_MEDIUM);
-    std::string l1 = "NES - Gamegear - Master System";
-    Display->setCursor(getCenterOffset(l1) + 1, boxY + 17);
-    Display->printf("%s", l1.c_str());
-
-    Display->setTextSize(TEXT_MEDIUM);
+    Display->setTextColor(TEXT_COLOR);
     std::string l2 = "Use rom uncompressed file";
     Display->setCursor(getCenterOffset(l2), boxY + 35);
     Display->printf("%s", l2.c_str());
@@ -308,9 +340,32 @@ void CardputerView::verticalSelectionSimple(
 
         Display->setCursor(x + 10, y + 12);
         Display->setTextSize(TEXT_LARGE);
-        Display->setTextColor(TEXT_COLOR);
 
-        Display->printf(truncateString(options[index], 20).c_str());
+        // Color by extension
+        std::string name = options[index];
+        std::string ext;
+        size_t dotPos = name.find_last_of('.');
+        if (dotPos != std::string::npos) {
+            ext = name.substr(dotPos + 1);
+            for (auto& c : ext)
+                c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        }
+
+        if (ext == "nes" && !isSelected)
+            Display->setTextColor(NES_COLOR);
+        else if (ext == "sms" && !isSelected)
+            Display->setTextColor(SMS_COLOR);
+        else if (ext == "gg" && !isSelected)
+            Display->setTextColor(GAMEGEAR_COLOR);
+        else if (ext.empty()) {
+            if ( !isSelected) {
+                Display->setTextColor(FOLDER_COLOR);
+            }
+            name = "/"  + name;
+        } else
+            Display->setTextColor(TEXT_COLOR);
+
+        Display->printf(truncateString(name, 20).c_str());
     }
 }
 

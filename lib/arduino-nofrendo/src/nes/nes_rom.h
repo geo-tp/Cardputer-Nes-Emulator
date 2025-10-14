@@ -59,25 +59,12 @@ typedef struct rominfo_s
    uint8 flags;
 
    char filename[PATH_MAX + 1];
-
-    /* === Streaming PRG/CHR  === */
-    FILE   *fp;          /* handle opened if streaming active */
-    long    prg_offset;  /* ftell() start PRG */
-    long    chr_offset;  /* ftell() start CHR */
-    size_t  prg_size;    /* rom_banks * 0x4000 */
-    size_t  chr_size;    /* vrom_banks * 0x2000 */
-    bool    streaming;   /* keep file open for on demand reading */
-
 } rominfo_t;
 
 extern int rom_checkmagic(const char *filename);
 extern rominfo_t *rom_load(const char *filename, ppu_t *ppu);
 extern void rom_free(rominfo_t **rominfo);
 extern char *rom_getinfo(rominfo_t *rominfo);
-
-bool rom_read_prg_bank(rominfo_t *ri, int bank16k, void *dst /* 16 KiB */);
-bool rom_read_prg8k   (rominfo_t *ri, int bank8k , void *dst /*  8 KiB */);
-bool rom_read_chr_at  (rominfo_t *ri, size_t offset, void *dst, size_t len);
 
 #endif /* _NES_ROM_H_ */
 

@@ -11,7 +11,7 @@ int16_t frame_scaling;
 static int16_t frame_x, frame_y, frame_x_offset, frame_y_offset, frame_width, frame_height, frame_line_pixels;
 extern uint16_t myPalette[];
 extern bool fullscreenMode;
-extern int zoomPercent;
+extern int nesZoomPercent;
 
 extern void display_begin() {}
 
@@ -93,7 +93,7 @@ void display_write_frame_zoom(const uint8_t *data[]) {
     const int srcH = NES_SCREEN_HEIGHT;  // 240
 
     // Center
-    uint32_t zp = (zoomPercent < 100) ? 100u : (uint32_t)zoomPercent;
+    uint32_t zp = (nesZoomPercent < 100) ? 100u : (uint32_t)nesZoomPercent;
     int roiW = (int)((uint32_t)srcW * 100u / zp);
     int roiH = (int)((uint32_t)srcH * 100u / zp);
     roiW = clampi(roiW, 16, srcW);
@@ -137,7 +137,7 @@ void display_write_frame(const uint8_t *data[]) {
         return;
     }
 
-    if (zoomPercent != 100) {
+    if (nesZoomPercent != 100) {
         display_write_frame_zoom(data);
         return;
     }

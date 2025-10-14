@@ -11,6 +11,7 @@ extern "C" {
 
 bool fullscreen = true;
 bool scanline   = true;
+int smsZoomPercent = 110;
 static constexpr int LCD_W = 240;
 static constexpr int LCD_H = 135;
 int srcW, srcH, srcX0, srcY0;
@@ -67,7 +68,6 @@ void sms_palette_init_fixed(){
     sms_palette_565[i] = rgb888_to_565(sms_palette_rgb[i]);
 }
 
-// Scalers
 static inline void compute_common(bool fullscreenMode){
   const bool isGG = (cart.type == TYPE_GG);
   srcW  = isGG ? 160 : 256;
@@ -78,6 +78,7 @@ static inline void compute_common(bool fullscreenMode){
   M5.Display.setSwapBytes(true);
   M5.Display.fillScreen(TFT_BLACK);
 
+  // --- base scaling ---
   if (fullscreenMode) {
     dstW = LCD_W; dstH = LCD_H; offX = 0; offY = 0;
   } else {
@@ -90,13 +91,23 @@ static inline void compute_common(bool fullscreenMode){
     offY = (LCD_H - dstH) / 2;
   }
 
-  // xmap
+  //ROI (zoom)
+  int zp = (smsZoomPercent <= 0) ? 100 : smsZoomPercent;
+  int roiW = srcW * 100 / zp;
+  int roiH = srcH * 100 / zp;
+  roiW = std::min(srcW, std::max(16, roiW));
+  roiH = std::min(srcH, std::max(16, roiH));
+  const int roiX0 = srcX0 + (srcW - roiW) / 2;
+  const int roiY0 = srcY0 + (srcH - roiH) / 2;
+
+  // mapping (xmap / ymap)
   for (int x = 0; x < dstW; ++x)
-    xmap[x] = (uint16_t)(srcX0 + (int)((int64_t)x * srcW / dstW));
-  // ymap
+    xmap[x] = (uint16_t)(roiX0 + ((int64_t)x * roiW / dstW));
+
   for (int y = 0; y < dstH; ++y)
-    ymap[y] = (uint16_t)(srcY0 + (int)((int64_t)y * srcH / dstH));
+    ymap[y] = (uint16_t)(roiY0 + ((int64_t)y * roiH / dstH));
 }
+
 
 void video_compute_scaler_full()   { compute_common(true);  }
 void video_compute_scaler_square() { compute_common(false); }
@@ -108,45 +119,9 @@ static uint8_t s_skip_phase = 0;
 
 IRAM_ATTR void sms_display_write_frame() {
   M5.Display.startWrite();
-
-  // mode square (no skip)
-  if (!scanline) {
-    M5.Display.setWindow(offX, offY, offX + dstW - 1, offY + dstH - 1);
-    int last_sy = -1;
-    for (int y = 0; y < dstH; ++y) {
-      const int sy = ymap[y];
-      const uint8_t* srcLine = bitmap.data + sy * bitmap.pitch;
-
-      if (sy != last_sy) {
-        const uint16_t* pal = sms_palette_565;
-        const uint16_t* sx  = xmap;
-        uint16_t* out = lineBuf;
-        int x = 0;
-        for (; x + 8 <= dstW; x += 8) {
-          out[x + 0] = pal[srcLine[sx[x + 0]]];
-          out[x + 1] = pal[srcLine[sx[x + 1]]];
-          out[x + 2] = pal[srcLine[sx[x + 2]]];
-          out[x + 3] = pal[srcLine[sx[x + 3]]];
-          out[x + 4] = pal[srcLine[sx[x + 4]]];
-          out[x + 5] = pal[srcLine[sx[x + 5]]];
-          out[x + 6] = pal[srcLine[sx[x + 6]]];
-          out[x + 7] = pal[srcLine[sx[x + 7]]];
-        }
-        for (; x < dstW; ++x) out[x] = pal[srcLine[sx[x]]];
-        last_sy = sy;
-      }
-      M5.Display.writePixels(lineBuf, dstW);
-    }
-    M5.Display.endWrite();
-    return;
-  }
-
-  // Mode fullscreen (skip lines)
   const uint8_t phase = s_skip_phase;
   int last_sy = -1;
   for (int y = 0; y < dstH; ++y) {
-    if (((y + phase) % SKIP_PERIOD) == SKIP_INDEX) continue;
-
     const int sy = ymap[y];
     const uint8_t* srcLine = bitmap.data + sy * bitmap.pitch;
 

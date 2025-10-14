@@ -16,7 +16,11 @@
 #define PRIMARY_COLOR 0xfc20
 #define RECT_COLOR_DARK 0x0841
 #define RECT_COLOR_LIGHT 0xd69a
-#define TEXT_COLOR 0xef7d
+#define TEXT_COLOR 0xef7d 
+#define SMS_COLOR      0x1C9F  // Bleu "SEGA" un peu adouci (≈ #1E90FF)
+#define NES_COLOR      0xFA47  // Rouge chaud légèrement orangé (≈ #FF4A3D)
+#define GAMEGEAR_COLOR 0xC29F  // Violet/magenta lumineux mais pas criard (≈ #C050FF)
+#define FOLDER_COLOR   0xFEC0  // Jaune pâle (≈ #F6EB61)
 
 // TEXT SIZE
 #define TEXT_BIG 2

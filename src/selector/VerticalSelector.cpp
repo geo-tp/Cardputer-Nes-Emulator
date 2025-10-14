@@ -98,7 +98,7 @@ int VerticalSelector::select(
                 } else filteredOptions = options;
                 break;
             default:
-                if (searchBar && std::isalnum((unsigned char)key)) {
+                if (searchBar && std::isprint((unsigned char)key)) {
                     searchQuery += key;
                     filteredOptions = filterOptions(options, searchQuery);
                     currentIndex = 0;
