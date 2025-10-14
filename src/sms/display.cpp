@@ -119,45 +119,9 @@ static uint8_t s_skip_phase = 0;
 
 IRAM_ATTR void sms_display_write_frame() {
   M5.Display.startWrite();
-
-  // mode square (no skip)
-  if (!scanline) {
-    M5.Display.setWindow(offX, offY, offX + dstW - 1, offY + dstH - 1);
-    int last_sy = -1;
-    for (int y = 0; y < dstH; ++y) {
-      const int sy = ymap[y];
-      const uint8_t* srcLine = bitmap.data + sy * bitmap.pitch;
-
-      if (sy != last_sy) {
-        const uint16_t* pal = sms_palette_565;
-        const uint16_t* sx  = xmap;
-        uint16_t* out = lineBuf;
-        int x = 0;
-        for (; x + 8 <= dstW; x += 8) {
-          out[x + 0] = pal[srcLine[sx[x + 0]]];
-          out[x + 1] = pal[srcLine[sx[x + 1]]];
-          out[x + 2] = pal[srcLine[sx[x + 2]]];
-          out[x + 3] = pal[srcLine[sx[x + 3]]];
-          out[x + 4] = pal[srcLine[sx[x + 4]]];
-          out[x + 5] = pal[srcLine[sx[x + 5]]];
-          out[x + 6] = pal[srcLine[sx[x + 6]]];
-          out[x + 7] = pal[srcLine[sx[x + 7]]];
-        }
-        for (; x < dstW; ++x) out[x] = pal[srcLine[sx[x]]];
-        last_sy = sy;
-      }
-      M5.Display.writePixels(lineBuf, dstW);
-    }
-    M5.Display.endWrite();
-    return;
-  }
-
-  // Mode fullscreen (skip lines)
   const uint8_t phase = s_skip_phase;
   int last_sy = -1;
   for (int y = 0; y < dstH; ++y) {
-    if (((y + phase) % SKIP_PERIOD) == SKIP_INDEX) continue;
-
     const int sy = ymap[y];
     const uint8_t* srcLine = bitmap.data + sy * bitmap.pitch;
 
