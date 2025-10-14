@@ -11,6 +11,7 @@
 #include <string.h>
 #include "nes/run_nes.h"
 #include "sms/run_sms.h"
+#include "last_game.h"
 
 void setup() {
   auto cfg = M5.config();
@@ -22,10 +23,6 @@ void setup() {
   CardputerView display;
   display.initialize();
 
-  // Welcome
-  display.welcome();
-  input.waitPress();
-
   // SD
   if (!sd.begin()) {
     while (1) {
@@ -35,8 +32,25 @@ void setup() {
     }
   }
 
-  // Get the ROM path from SD
-  auto romPath = getRomPath(sd, display, input);
+  std::string romPath;
+  auto romFolder = getRomFolderFromNvs(display, input, sd);
+  romFolder = romFolder.empty() ? "/" : romFolder;
+
+  if (isQuittingGame()) {
+    romPath = getRomPath(sd, display, input, romFolder, true);
+  } else {
+      // Welcome
+    display.welcome();
+    input.waitPress();
+
+    // Try to get last game from NVS or select a new one
+    romPath = getLastGameFromNvs(display, input, sd);
+    if (romPath.empty()) {
+      romPath = getRomPath(sd, display, input, romFolder);
+    } else {
+      romPath = "/sd" + romPath; // ensure sd/ prefix
+    }
+  }
 
   display.topBar("COPYING TO FLASH", false, false);
   display.subMessage("Loading...", 0);
@@ -50,6 +64,7 @@ void setup() {
       delay(1500);
     }
   }
+
 
   // Copy the ROM file to the partition
   size_t romSize = 0;
@@ -73,9 +88,42 @@ void setup() {
   // Register the XIP VFS
   vfs_xip_register();
 
+  // Show keymapping
+  display.topBar("- + SOUND [ ] BRIGHT", false, false);
+  display.showKeymapping();
+
+  // Wait for key press or show tips
+  uint32_t lastUpdate = millis();
+  int state = 0;
+  for (;;) {
+    char key = input.readChar();
+    if (key != KEY_NONE) break;
+
+    // Show tips
+    uint32_t now = millis();
+    if (now - lastUpdate >= 2000) {
+      lastUpdate = now;
+      switch (state) {
+        case 0: display.topBar("PRESS ANY KEY TO START", false, false); break;
+        case 1: display.topBar("KEY \\ SCREEN MODE",       false, false); break;
+        case 2: display.topBar("- + SOUND [ ] BRIGHT",     false, false); break;
+        case 3: display.topBar("G0 2SEC TO QUIT GAME",     false, false); break;
+        case 4: display.topBar("FN + ARROWS FOR ZOOM",     false, false); break;
+      }
+      state = (state + 1) % 5;
+    }
+    delay(1);
+  }
+
   // Check the extension to choose the emulator
   auto ext = getRomType(romPath);
 
+  // Save last game to nvs
+  if (ext != ROM_TYPE_UNKNOWN) {
+      saveLastGameToNvs(romPath);
+  }
+
+  // Run the emulator
   if (ext == ROM_TYPE_NES) {
       // --- NES ---
       auto pos = romPath.find_last_of("/\\");
