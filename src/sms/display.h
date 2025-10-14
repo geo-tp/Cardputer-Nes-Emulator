@@ -12,6 +12,7 @@ extern "C" {
 }
 #endif
 
+void sms_display_init();
 void sms_palette_init_fixed();
 void video_compute_scaler_full();
 void video_compute_scaler_square();

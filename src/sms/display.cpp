@@ -18,10 +18,11 @@ int srcW, srcH, srcX0, srcY0;
 static int dstW, dstH, offX, offY;
 
 // Buffers
-DRAM_ATTR static uint16_t lineBuf[LCD_W] __attribute__((aligned(4)));
-DRAM_ATTR static uint16_t xmap[LCD_W]    __attribute__((aligned(4)));
-DRAM_ATTR static uint16_t ymap[LCD_H]    __attribute__((aligned(4)));
-DRAM_ATTR static uint16_t sms_palette_565[256] __attribute__((aligned(4)));
+uint16_t* lineBuf = nullptr;
+uint16_t* xmap    = nullptr;
+uint16_t* ymap    = nullptr;
+uint16_t* sms_palette_565 = nullptr;
+
 static inline uint16_t rgb888_to_565(uint32_t c){
   uint8_t r = (c >> 16) & 0xFF, g = (c >> 8) & 0xFF, b = c & 0xFF;
   return ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
@@ -62,6 +63,29 @@ DRAM_ATTR static const uint32_t sms_palette_rgb[256] __attribute__((aligned(4)))
   0x00FF9000,0x00FF9048,0x00FF90B4,0x00FF90FF,0x00FFB400,0x00FFB448,0x00FFB4B4,0x00FFB4FF,
   0x00FFD800,0x00FFD848,0x00FFD8B4,0x00FFD8FF,0x00FFFF00,0x00FFFF48,0x00FFFFB4,0x00FFFFFF,
 };
+
+void sms_display_init() {
+  M5.Display.setSwapBytes(true);
+
+  free(lineBuf);
+  free(xmap);
+  free(ymap);
+  free(sms_palette_565);
+
+  // Alloc
+  lineBuf         = (uint16_t*)malloc(LCD_W * sizeof(uint16_t));
+  xmap            = (uint16_t*)malloc(LCD_W * sizeof(uint16_t));
+  ymap            = (uint16_t*)malloc(LCD_H * sizeof(uint16_t));
+  sms_palette_565 = (uint16_t*)malloc(256   * sizeof(uint16_t));
+
+  if (!lineBuf || !xmap || !ymap || !sms_palette_565) {
+    Serial.println("Erreur d'allocation display buffers !");
+    while (true) delay(100);
+  }
+
+  M5.Display.fillScreen(TFT_BLACK);
+  Serial.printf("Display init: %dx%d OK\n", LCD_W, LCD_H);
+}
 
 void sms_palette_init_fixed(){
   for (int i=0;i<256;i++)
@@ -107,7 +131,6 @@ static inline void compute_common(bool fullscreenMode){
   for (int y = 0; y < dstH; ++y)
     ymap[y] = (uint16_t)(roiY0 + ((int64_t)y * roiH / dstH));
 }
-
 
 void video_compute_scaler_full()   { compute_common(true);  }
 void video_compute_scaler_square() { compute_common(false); }
