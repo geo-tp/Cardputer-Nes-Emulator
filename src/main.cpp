@@ -106,9 +106,9 @@ void setup() {
       switch (state) {
         case 0: display.topBar("PRESS ANY KEY TO START", false, false); break;
         case 1: display.topBar("KEY \\ SCREEN MODE",       false, false); break;
-        case 2: display.topBar("- + SOUND [ ] BRIGHT",     false, false); break;
-        case 3: display.topBar("G0 2SEC TO QUIT GAME",     false, false); break;
-        case 4: display.topBar("FN + ARROWS FOR ZOOM",     false, false); break;
+        case 2: display.topBar("G0 1SEC TO QUIT GAME",     false, false); break;
+        case 3: display.topBar("FN + ARROWS FOR ZOOM",     false, false); break;
+        case 4: display.topBar("- + SOUND [ ] BRIGHT",     false, false); break;
       }
       state = (state + 1) % 5;
     }
