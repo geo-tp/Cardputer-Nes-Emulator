@@ -14,40 +14,45 @@ void cardputer_input_init() {
     // nothing for now
 }
 
-void cardputer_read_input() {
+void cardputer_read_input(bool isGG) {
     int smsButtons = 0; // -> input.pad[0]
     int smsSystem  = 0; // -> input.system
 
     M5Cardputer.update();
     Keyboard_Class::KeysState status = M5Cardputer.Keyboard.keysState();
 
-    // ---------- Raccourcis ----------
+    // Bouton GO
+    if (M5Cardputer.BtnA.pressedFor(1000)) {
+        // use as a hack to quit the game
+        esp_sleep_enable_timer_wakeup(1000); // 1ms
+        esp_deep_sleep_start();    
+    }
 
     // Volume +
     if (key('=') || (status.fn && key(';'))) {
         int v = M5Cardputer.Speaker.getVolume();
-        M5Cardputer.Speaker.setVolume(std::min(v + 5, 200));
+        M5Cardputer.Speaker.setVolume(std::min(v + 3, 255));
         input.pad[0] = 0; input.system = 0;
         return;
     }
     // Volume -
     if (key('-') || (status.fn && key('.'))) {
         int v = M5Cardputer.Speaker.getVolume();
-        M5Cardputer.Speaker.setVolume(std::max(v - 5, 0));
+        M5Cardputer.Speaker.setVolume(std::max(v - 3, 0));
         input.pad[0] = 0; input.system = 0;
         return;
     }
     // Bright +
     if (key(']')) {
         int b = M5Cardputer.Display.getBrightness();
-        M5Cardputer.Display.setBrightness(std::min(b + 10, 255));
+        M5Cardputer.Display.setBrightness(std::min(b + 2, 255));
         input.pad[0] = 0; input.system = 0;
         return;
     }
     // Bright -
     if (key('[')) {
         int b = M5Cardputer.Display.getBrightness();
-        M5Cardputer.Display.setBrightness(std::max(b - 10, 0));
+        M5Cardputer.Display.setBrightness(std::max(b - 2, 0));
         input.pad[0] = 0; input.system = 0;
         return;
     }
@@ -99,10 +104,12 @@ void cardputer_read_input() {
     if (key('s') || key('.')) smsButtons |= INPUT_DOWN;
     if (key('j') || key('l')) smsButtons |= INPUT_BUTTON1;
     if (key('k'))             smsButtons |= INPUT_BUTTON2;
-    if (key('p')) smsSystem |= INPUT_PAUSE;
-    if (key('1')) smsSystem |= INPUT_START;
-    if (key('r')) smsSystem |= INPUT_SOFT_RESET;
-    if (key('R')) smsSystem |= INPUT_HARD_RESET;
+
+    if (isGG) {
+        if (key('1')) smsSystem |= INPUT_START;
+    } else {
+        if (key('1')) smsSystem |= INPUT_PAUSE;
+    }
 
     input.pad[0]  = smsButtons;
     input.system  = smsSystem;

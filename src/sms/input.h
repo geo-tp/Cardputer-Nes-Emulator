@@ -42,4 +42,4 @@ extern bool fullscreen;
 extern bool scanline;
 
 void cardputer_input_init();
-void cardputer_read_input();
+void cardputer_read_input(bool isGG);
