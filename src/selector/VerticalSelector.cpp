@@ -83,6 +83,7 @@ int VerticalSelector::select(
                     currentIndex = (currentIndex < (int)filteredOptions.size() - 1) ? currentIndex + 1 : 0;
                 break;
             case KEY_OK:
+            case KEY_ARROW_RIGHT:
                 if (!filteredOptions.empty())
                     for (size_t i = 0; i < options.size(); ++i)
                         if (options[i] == filteredOptions[currentIndex]) return (int)i;
@@ -98,7 +99,8 @@ int VerticalSelector::select(
                 } else filteredOptions = options;
                 break;
             default:
-                if (searchBar && std::isprint((unsigned char)key)) {
+                auto valid = std::isalnum((unsigned char)key) || key == ' ' || key == '-' || key == '_';
+                if (searchBar && valid) {
                     searchQuery += key;
                     filteredOptions = filterOptions(options, searchQuery);
                     currentIndex = 0;

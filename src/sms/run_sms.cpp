@@ -40,6 +40,7 @@ void run_sms(const uint8_t* romPtr, size_t romLen, bool isGG)
   emu_system_init(22050);
   system_reset();
 
+  sms_display_init();              // init display + alloc buffers
   sms_palette_init_fixed();          // 1x
   video_compute_scaler_full();       // fullscreen
 

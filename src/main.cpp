@@ -24,12 +24,10 @@ void setup() {
   display.initialize();
 
   // SD
-  if (!sd.begin()) {
-    while (1) {
-      display.topBar("SD CARD ROM", false, false);
-      display.subMessage("No SD card found", 0);
-      delay(1000);
-    }
+  while (!sd.begin()) {
+    display.topBar("SD CARD FOR ROMS", false, false);
+    display.subMessage("No SD card found", 1000);
+    display.subMessage("Insert SD card", 0);
   }
 
   std::string romPath;
@@ -46,9 +44,10 @@ void setup() {
     // Try to get last game from NVS or select a new one
     romPath = getLastGameFromNvs(display, input, sd);
     if (romPath.empty()) {
-      romPath = getRomPath(sd, display, input, romFolder);
+      auto skipWelcome = romFolder == "/" ? false : true;
+      romPath = getRomPath(sd, display, input, romFolder, skipWelcome);
     } else {
-      romPath = "/sd" + romPath; // ensure sd/ prefix
+      romPath = "/sd" + romPath; // ensure sd prefix
     }
   }
 
@@ -64,7 +63,6 @@ void setup() {
       delay(1500);
     }
   }
-
 
   // Copy the ROM file to the partition
   size_t romSize = 0;
@@ -106,9 +104,9 @@ void setup() {
       switch (state) {
         case 0: display.topBar("PRESS ANY KEY TO START", false, false); break;
         case 1: display.topBar("KEY \\ SCREEN MODE",       false, false); break;
-        case 2: display.topBar("- + SOUND [ ] BRIGHT",     false, false); break;
-        case 3: display.topBar("G0 2SEC TO QUIT GAME",     false, false); break;
-        case 4: display.topBar("FN + ARROWS FOR ZOOM",     false, false); break;
+        case 2: display.topBar("G0 1SEC TO QUIT GAME",     false, false); break;
+        case 3: display.topBar("FN + ARROWS FOR ZOOM",     false, false); break;
+        case 4: display.topBar("- + SOUND [ ] BRIGHT",     false, false); break;
       }
       state = (state + 1) % 5;
     }
