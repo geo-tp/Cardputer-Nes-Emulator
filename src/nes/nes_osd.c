@@ -167,7 +167,7 @@ void osd_getinput(void)
     const int ev[32] = {
         event_joypad1_up,    event_joypad1_down,  event_joypad1_left,  event_joypad1_right,
         event_joypad1_select,event_joypad1_start, event_joypad1_a,     event_joypad1_b,
-        event_state_save,    event_state_load,    0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0
+        event_state_save,    event_state_load,    event_togglepause, 0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0
     };
     static int oldb = 0xffff;
     uint32_t b   = controller_read_input();

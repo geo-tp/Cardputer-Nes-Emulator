@@ -580,6 +580,10 @@ _fail:
    return NULL;
 }
 
+bool nes_pausestate(void) {
+   return nes.pause;
+}
+
 /*
 ** $Log: nes.c,v $
 ** Revision 1.2  2001/04/27 14:37:11  neil
