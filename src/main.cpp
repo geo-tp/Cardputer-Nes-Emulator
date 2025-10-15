@@ -24,12 +24,10 @@ void setup() {
   display.initialize();
 
   // SD
-  if (!sd.begin()) {
-    while (1) {
-      display.topBar("SD CARD ROM", false, false);
-      display.subMessage("No SD card found", 0);
-      delay(1000);
-    }
+  while (!sd.begin()) {
+    display.topBar("SD CARD FOR ROMS", false, false);
+    display.subMessage("No SD card found", 1000);
+    display.subMessage("Insert SD card", 0);
   }
 
   std::string romPath;
@@ -46,9 +44,10 @@ void setup() {
     // Try to get last game from NVS or select a new one
     romPath = getLastGameFromNvs(display, input, sd);
     if (romPath.empty()) {
-      romPath = getRomPath(sd, display, input, romFolder);
+      auto skipWelcome = romFolder == "/" ? false : true;
+      romPath = getRomPath(sd, display, input, romFolder, skipWelcome);
     } else {
-      romPath = "/sd" + romPath; // ensure sd/ prefix
+      romPath = "/sd" + romPath; // ensure sd prefix
     }
   }
 
@@ -64,7 +63,6 @@ void setup() {
       delay(1500);
     }
   }
-
 
   // Copy the ROM file to the partition
   size_t romSize = 0;
