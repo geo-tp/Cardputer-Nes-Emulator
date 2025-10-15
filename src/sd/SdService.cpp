@@ -20,7 +20,7 @@ bool SdService::begin() {
         }
     }
 
-    sdCardMounted = true;
+    sdCardMounted = false;
     return sdCardMounted;
 }
 
