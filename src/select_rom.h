@@ -61,32 +61,41 @@ static inline std::string getRomPath(SdService& sdService, CardputerView& displa
     VerticalSelector verticalSelector(display, input);
 
     display.initialize();
+    display.topBar("LOAD ROM CARTRIDGE", false, false);
+
     if (!skipWelcome) {
-        display.topBar("LOAD ROM CARTRIDGE", false, false);
-        display.subMessage(".nes .gg .sms files", 500);
+        display.subMessage(".nes .gg .sms files", 2000);
+    } else {
+        display.subMessage("Loading...", 0);
     }
+
     if (!sdService.begin()) {
         display.subMessage("SD card not found", 2000);
         return "";
     }
-    input.flushInput(1000); // avoid double tap, flush any previous input
 
+    input.flushInput(1);
     std::string currentPath = initialFolder.empty() ? "/" : initialFolder;
+    std::string previousPath;
     std::vector<std::string> elementNames;
 
     while (true) {
         // List elements
-        display.subMessage("Loading...", 0);
-        elementNames = sdService.getCachedDirectoryElements(currentPath);
-        if (elementNames.empty()) {
-            display.subMessage("No elements found", 2000);
-            auto parent = sdService.getParentDirectory(currentPath);
-            if (parent.empty() || parent == currentPath) {
-                sdService.close();
-                return "";
+        if (currentPath != previousPath) {
+            display.subMessage("Loading...", 0);
+            elementNames = sdService.getCachedDirectoryElements(currentPath);
+            previousPath = currentPath;
+
+            if (elementNames.empty()) {
+                display.subMessage("No elements found", 2000);
+                auto parent = sdService.getParentDirectory(currentPath);
+                if (parent.empty() || parent == currentPath) {
+                    sdService.close();
+                    return "";
+                }
+                currentPath = parent;
+                continue;
             }
-            currentPath = parent;
-            continue;
         }
 
         // Select element
