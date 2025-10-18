@@ -41,7 +41,7 @@ The built-in **Cardputer keyboard** is used for all controls:
 
 The Zoom Mode allows you to **dynamically adjust the display scale of games** on the Cardputer’s screen.
 
-By pressing `/`, you can toggle between **multiple zoom levels (100 to 150%),  fullscreen or 4/3**. This flexibility ensures that each game looks its best on the Cardputer’s compact display.
+By pressing `\`, you can toggle between **multiple zoom levels (100 to 150%),  fullscreen or 4/3**. This flexibility ensures that each game looks its best on the Cardputer’s compact display.
 
 You can precisely adjust the display zoom level with `fn` + `arrows left/right`.
 
