@@ -3,8 +3,8 @@
 #include <M5Cardputer.h>
 #include <stdio.h>
 
-#include "display/CardputerView.h"
-#include "input/CardputerInput.h"
+#include "cardputer/CardputerView.h"
+#include "cardputer/CardputerInput.h"
 
 #include "sms/display.h"
 #include "sms/sound.h"

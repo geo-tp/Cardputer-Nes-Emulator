@@ -1,7 +1,7 @@
 #include <M5Cardputer.h>
 #include <select_rom.h>
-#include "display/CardputerView.h"
-#include "input/CardputerInput.h"
+#include "cardputer/CardputerView.h"
+#include "cardputer/CardputerInput.h"
 #include "sd/SdService.h"
 #include "vfs/vfs_xip.h"
 #include "vfs/rom_flash_io.h"

@@ -4,8 +4,8 @@
 #include <Arduino.h>
 #include <string>
 #include <vector>
-#include <display/CardputerView.h>
-#include <input/CardputerInput.h>
+#include <cardputer/CardputerView.h>
+#include <cardputer/CardputerInput.h>
 
 class VerticalSelector {
 public:
