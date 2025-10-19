@@ -3,8 +3,8 @@
 
 #include <string>
 #include <Arduino.h>
-#include "input/CardputerInput.h"
-#include "display/CardputerView.h"
+#include "cardputer/CardputerInput.h"
+#include "cardputer/CardputerView.h"
 
 class ConfirmationSelector {
 public:

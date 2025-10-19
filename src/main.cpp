@@ -1,7 +1,7 @@
 #include <M5Cardputer.h>
 #include <select_rom.h>
-#include "display/CardputerView.h"
-#include "input/CardputerInput.h"
+#include "cardputer/CardputerView.h"
+#include "cardputer/CardputerInput.h"
 #include "sd/SdService.h"
 #include "vfs/vfs_xip.h"
 #include "vfs/rom_flash_io.h"
@@ -121,19 +121,21 @@ void setup() {
       saveLastGameToNvs(romPath);
   }
 
+  // Prepare rom filename for emulators
+  auto pos = romPath.find_last_of("/\\");
+  std::string romName = (pos == std::string::npos) ? romPath : romPath.substr(pos + 1);
+  static char romArg[256];
+
   // Run the emulator
   if (ext == ROM_TYPE_NES) {
       // --- NES ---
-      auto pos = romPath.find_last_of("/\\");
-      std::string romName = (pos == std::string::npos) ? romPath : romPath.substr(pos + 1);
-      static char romArg[256];
       std::snprintf(romArg, sizeof(romArg), "/xip/%s", romName.c_str());
       run_nes(romArg);
   }
   else if (ext == ROM_TYPE_GAMEGEAR || ext == ROM_TYPE_SMS) {
       // --- Master System / Game Gear ---
       bool isGG = (ext == ROM_TYPE_GAMEGEAR);
-      run_sms(_get_rom_ptr(), _get_rom_size(), isGG);
+      run_sms(_get_rom_ptr(), _get_rom_size(), isGG, romName.c_str());
   }
   else {
       display.topBar("ERROR", false, false);

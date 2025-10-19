@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <string>
 
-#include "display/CardputerView.h"
-#include "input/CardputerInput.h"
+#include "cardputer/CardputerView.h"
+#include "cardputer/CardputerInput.h"
 
 void run_nes(const char* xipPath)
 {

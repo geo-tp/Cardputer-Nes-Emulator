@@ -4,8 +4,8 @@
 #include <algorithm>
 #include <Preferences.h>
 #include "sd/SdService.h"
-#include "display/CardputerView.h"
-#include "input/CardputerInput.h"
+#include "cardputer/CardputerView.h"
+#include "cardputer/CardputerInput.h"
 #include "selector/ConfirmationSelector.h"
 
 // Helper: basename from path

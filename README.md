@@ -12,7 +12,7 @@ It runs **`.nes` `.gg` `.sms` ROM files directly from the SD**, simply browse an
 
 **All games are supported**. 
 
-For NES, save files are stored on the SD card in the `nes_saves` folder.
+Save files are stored on the SD card in the `nes_saves` or `sms_saves` (GG/SMS) folders.
 
 ## Controls
 
@@ -41,7 +41,7 @@ The built-in **Cardputer keyboard** is used for all controls:
 
 The Zoom Mode allows you to **dynamically adjust the display scale of games** on the Cardputer’s screen.
 
-By pressing `/`, you can toggle between **multiple zoom levels (100 to 150%),  fullscreen or 4/3**. This flexibility ensures that each game looks its best on the Cardputer’s compact display.
+By pressing `\`, you can toggle between **multiple zoom levels (100 to 150%),  fullscreen or 4/3**. This flexibility ensures that each game looks its best on the Cardputer’s compact display.
 
 You can precisely adjust the display zoom level with `fn` + `arrows left/right`.
 
@@ -58,6 +58,6 @@ All games  `.nes` `.gg` `.sms` should be **supported** and run at **full speed*
 ✅ Expected behavior:
 - Smooth 60 FPS gameplay  
 - Accurate sound emulation  
-- SD save/load functionality (NES)
+- SD save/load functionality
 
 You can pic any file from your SD using the file browser. When browsing your game list, you can **type the first few letters of a game’s name** to jump directly to it. This makes it much faster to find a specific title, especially when your library contains dozens of entries. You should **avoid game titles longer than 64 characters**.
