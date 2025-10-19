@@ -121,19 +121,21 @@ void setup() {
       saveLastGameToNvs(romPath);
   }
 
+  // Prepare rom filename for emulators
+  auto pos = romPath.find_last_of("/\\");
+  std::string romName = (pos == std::string::npos) ? romPath : romPath.substr(pos + 1);
+  static char romArg[256];
+
   // Run the emulator
   if (ext == ROM_TYPE_NES) {
       // --- NES ---
-      auto pos = romPath.find_last_of("/\\");
-      std::string romName = (pos == std::string::npos) ? romPath : romPath.substr(pos + 1);
-      static char romArg[256];
       std::snprintf(romArg, sizeof(romArg), "/xip/%s", romName.c_str());
       run_nes(romArg);
   }
   else if (ext == ROM_TYPE_GAMEGEAR || ext == ROM_TYPE_SMS) {
       // --- Master System / Game Gear ---
       bool isGG = (ext == ROM_TYPE_GAMEGEAR);
-      run_sms(_get_rom_ptr(), _get_rom_size(), isGG);
+      run_sms(_get_rom_ptr(), _get_rom_size(), isGG, romName.c_str());
   }
   else {
       display.topBar("ERROR", false, false);

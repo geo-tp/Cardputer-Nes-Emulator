@@ -8,4 +8,4 @@ extern "C" {
 }
 #endif
 
-void run_sms(const uint8_t* romPtr, size_t romLen, bool isGG);
+void run_sms(const uint8_t* romPtr, size_t romLen, bool isGG, const char* romName);
