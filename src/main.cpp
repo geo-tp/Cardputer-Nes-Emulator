@@ -11,7 +11,11 @@
 #include <string.h>
 #include "nes/run_nes.h"
 #include "sms/run_sms.h"
+#include "ngp/run_ngp.h"
 #include "last_game.h"
+#define RETRO_COMPAT_IMPLEMENTATION
+#include "ngp/race/retro_compat.h"
+
 
 void setup() {
   auto cfg = M5.config();
@@ -37,7 +41,7 @@ void setup() {
   if (isQuittingGame()) {
     romPath = getRomPath(sd, display, input, romFolder, true);
   } else {
-      // Welcome
+    // Welcome
     display.welcome();
     input.waitPress();
 
@@ -50,6 +54,8 @@ void setup() {
       romPath = "/sd" + romPath; // ensure sd prefix
     }
   }
+
+  printf("Selected ROM: %s\n", romPath.c_str());
 
   display.topBar("COPYING TO FLASH", false, false);
   display.subMessage("Loading...", 0);
@@ -73,6 +79,8 @@ void setup() {
       delay(1500);
     }
   }
+
+  input.flushInput(10); // flush any input just in case
 
   // Map the ROM partition in XIP
   if (xip_map_rom_partition("spiffs", romSize) != 0) {
@@ -136,6 +144,12 @@ void setup() {
       // --- Master System / Game Gear ---
       bool isGG = (ext == ROM_TYPE_GAMEGEAR);
       run_sms(_get_rom_ptr(), _get_rom_size(), isGG, romName.c_str());
+  }
+  else if (ext == ROM_TYPE_NGP) {
+      // --- Neo Geo Pocket ---
+      int machine = detectNeoGeoPocketFromRom(_get_rom_ptr(), _get_rom_size(), romPath);
+      // Can't allocate mem for ngp emulator and the 2  other emulators at the same time atm
+      // run_ngp(_get_rom_ptr(), _get_rom_size(), machine);
   }
   else {
       display.topBar("ERROR", false, false);
