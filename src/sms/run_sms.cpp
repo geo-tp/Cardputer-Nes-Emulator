@@ -76,37 +76,37 @@ void run_sms(const uint8_t* romPtr, size_t romLen, bool isGG, const char* romNam
     cardputer_read_input(isGG);
     sms_display_write_frame();
 
-    uint32_t emuUs = micros() - t0;
-
     // Pacing 60 Hz
-    int32_t remaining = (int32_t)TARGET_US - (int32_t)emuUs;
+    uint32_t emuUs = micros() - t0;
+    int32_t remaining = TARGET_US - emuUs;
     if (remaining > 0) {
-      delayMicroseconds((uint32_t)remaining);
+      delayMicroseconds(remaining);
     }
+    
+  // LOG FRAME TIME - DISABLED FOR NOW
+  //   // Realtime
+  //   uint32_t frameUs = micros() - t0;
 
-    // Realtime
-    uint32_t frameUs = micros() - t0;
+  //   // Stats
+  //   avgFrameTime += emuUs;      // perf brute
+  //   avgFrameTimeRT += frameUs;  // FPS effectif
+  //   frameCount++;
 
-    // // Stats
-    // avgFrameTime += emuUs;      // perf brute
-    // avgFrameTimeRT += frameUs;  // FPS effectif
-    // frameCount++;
+  //   if (millis() - lastFpsTime >= 1000) {
+  //     float avgRaw = avgFrameTime / frameCount;
+  //     float fpsRaw = 1000000.0f / avgRaw;
+  //     float speedPct = (fpsRaw / 60.0f) * 100.0f;
 
-    // if (millis() - lastFpsTime >= 1000) {
-    //   float avgRaw = avgFrameTime / frameCount;
-    //   float fpsRaw = 1000000.0f / avgRaw;
-    //   float speedPct = (fpsRaw / 60.0f) * 100.0f;
+  //     float avgRT = avgFrameTimeRT / frameCount;
+  //     float fpsRT = 1000000.0f / avgRT;
 
-    //   float avgRT = avgFrameTimeRT / frameCount;
-    //   float fpsRT = 1000000.0f / avgRT;
+  //     printf("[Perf] raw=%.1f us (%.1f fps, %.1f%%) | realtime=%.1f us (%.2f fps)\n",
+  //           avgRaw, fpsRaw, speedPct, avgRT, fpsRT);
 
-    //   printf("[Perf] raw=%.1f us (%.1f fps, %.1f%%) | realtime=%.1f us (%.2f fps)\n",
-    //         avgRaw, fpsRaw, speedPct, avgRT, fpsRT);
-
-    //   avgFrameTime = 0;
-    //   avgFrameTimeRT = 0;
-    //   frameCount = 0;
-    //   lastFpsTime = millis();
-    // }
+  //     avgFrameTime = 0;
+  //     avgFrameTimeRT = 0;
+  //     frameCount = 0;
+  //     lastFpsTime = millis();
+  //   }
   }
 }
