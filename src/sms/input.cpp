@@ -101,7 +101,7 @@ void cardputer_read_input(bool isGG) {
     if (key('a') || key(',')) smsButtons |= INPUT_LEFT;
     if (key('d') || key('/')) smsButtons |= INPUT_RIGHT;
     if (key('e') || key(';')) smsButtons |= INPUT_UP;
-    if (key('s') || key('.')) smsButtons |= INPUT_DOWN;
+    if (key('s') || key('.') || key('z')) smsButtons |= INPUT_DOWN;
     if (key('j') || key('l')) smsButtons |= INPUT_BUTTON1;
     if (key('k'))             smsButtons |= INPUT_BUTTON2;
 
