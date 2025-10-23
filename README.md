@@ -3,12 +3,12 @@
 ![Emulator screen captures on the M5Stack Cardputer](nes_emulator_s.jpg)
 ![Emulator screen captures on the M5Stack Cardputer](sms_emulator_s.jpg)
 
-Powered by [Nofrendo](https://github.com/moononournation/arduino-nofrendo) and **Smsplus**. 
+Powered by [Nofrendo](https://github.com/moononournation/arduino-nofrendo), **Smsplus** and [Race](https://github.com/libretro/RACE). 
 
-**NES, Game Gear and Master System emulators running on the M5Stack Cardputer**, with sound, video, save, and gamepad controls.
+**NES, Game Gear Master System, Neo Geo Pocket emulators running on the M5Stack Cardputer**, with sound, video, save, and gamepad controls.
 
-It runs **`.nes` `.gg` `.sms` ROM files directly from the SD**, simply browse and select the game you want to play.
-**Make sure your ROMs are uncompressed** (.nes .gg .sms only — not .zip, .7z, or .rar).
+It runs **`.nes` `.gg` `.sms` `.ngc` ROM files directly from the SD**, simply browse and select the game you want to play.
+**Make sure your ROMs are uncompressed** (.nes .gg .sms .ngc only — not .zip, .7z, or .rar).
 
 **All games are supported**. 
 
@@ -53,7 +53,7 @@ You can precisely adjust the display zoom level with `fn` + `arrows left/right`.
 
 ## About Games
 
-All games  `.nes` `.gg` `.sms` should be **supported** and run at **full speed**. You can place the ROM files anywhere on your SD card and select them.
+All games  `.nes` `.gg` `.sms` `.ngc` should be **supported** and run at **full speed**. You can place the ROM files anywhere on your SD card and select them.
 
 ✅ Expected behavior:
 - Smooth 60 FPS gameplay  
