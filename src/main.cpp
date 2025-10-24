@@ -16,7 +16,6 @@
 #define RETRO_COMPAT_IMPLEMENTATION
 #include "ngp/race/retro_compat.h"
 
-
 void setup() {
   auto cfg = M5.config();
   cfg.output_power = true;
@@ -26,7 +25,6 @@ void setup() {
   SdService sd;
   CardputerView display;
   display.initialize();
-
   // SD
   while (!sd.begin()) {
     display.topBar("SD CARD FOR ROMS", false, false);
@@ -132,11 +130,11 @@ void setup() {
   // Prepare rom filename for emulators
   auto pos = romPath.find_last_of("/\\");
   std::string romName = (pos == std::string::npos) ? romPath : romPath.substr(pos + 1);
-  static char romArg[256];
-
+  
   // Run the emulator
   if (ext == ROM_TYPE_NES) {
-      // --- NES ---
+    // --- NES ---
+      char romArg[256];
       std::snprintf(romArg, sizeof(romArg), "/xip/%s", romName.c_str());
       run_nes(romArg);
   }
@@ -148,8 +146,7 @@ void setup() {
   else if (ext == ROM_TYPE_NGP) {
       // --- Neo Geo Pocket ---
       int machine = detectNeoGeoPocketFromRom(_get_rom_ptr(), _get_rom_size(), romPath);
-      // Can't allocate mem for ngp emulator and the 2  other emulators at the same time atm
-      // run_ngp(_get_rom_ptr(), _get_rom_size(), machine);
+      run_ngp(_get_rom_ptr(), _get_rom_size(), machine);
   }
   else {
       display.topBar("ERROR", false, false);

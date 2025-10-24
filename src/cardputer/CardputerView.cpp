@@ -19,7 +19,7 @@ void CardputerView::initialize() {
         }
 
         auto pcfg = panel->config();
-        pcfg.bus_shared = true;
+        pcfg.bus_shared = false;
         panel->config(pcfg);
     }
 

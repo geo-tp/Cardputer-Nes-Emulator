@@ -27,7 +27,6 @@ extern "C" unsigned int gen_regsPC;
 #define tlcsPc gen_regsPC
 extern EMUINFO m_emuInfo;
 extern int tipo_consola;
-__attribute__((weak)) void tlcs_execute(int cycles) { (void)cycles; }
 __attribute__((weak)) void tlcs_reset(void) {}
 
 unsigned char *rasterY = 0;
@@ -142,7 +141,7 @@ void run_ngp(const uint8_t* rom_base, size_t rom_size, int machine)
   if (bgTable)   bgTable[0] = 0xFFFF;
   if (bgSelect) *bgSelect |= 0x80;  // enable bgTable[index]
 
-  // CPU / Z80 / son
+  // CPU
   tlcs_init();
   tlcs_reset();
   Z80_Init(); 
@@ -197,25 +196,44 @@ void run_ngp(const uint8_t* rom_base, size_t rom_size, int machine)
 
   printf("[NGPC_RUN] starting core loop\n");
 
+  #ifdef FRAMESKIP
+      const int skipFrames = 1;
+  #endif
+
   unsigned long status_last = millis();
   unsigned long frames = 0;
+  const uint32_t TARGET_US = 16667; // 60 Hz
+  const uint32_t CPU_CLOCK_HZ = 6000000; // 6 MHz
 
   while (m_bIsActive)
   {
-      // Execute one frame (1/60s)
-      tlcs_execute((6 * 1024 * 1024) / 60);
+      uint32_t t0 = micros();  
+
+      // Execute one frame
+      #ifdef FRAMESKIP
+              tlcs_execute((CPU_CLOCK_HZ) / 60, skipFrames);
+      #else
+              tlcs_execute((CPU_CLOCK_HZ) / 60);
+      #endif
       ngc_input_poll();
       taskYIELD();
-      
-      // // Log framerate
-      // frames++;
-      // if (millis() - status_last >= 2000)
-      // {
-      //     printf("[NGPC_RUN] %lu frames / 2s (~%lu FPS)\n",
-      //             frames, frames / 2);
 
-      //     frames = 0;
-      //     status_last = millis();
-      // }
+      // Pacing 60 Hz
+      uint32_t emuUs = micros() - t0;
+      int32_t remaining = TARGET_US - emuUs;
+      if (remaining > 0) {
+        delayMicroseconds(remaining);
+      }
+      
+      // Log framerate
+      frames++;
+      if (millis() - status_last >= 2000)
+      {
+          printf("[NGPC_RUN] %lu frames / 2s (~%lu FPS)\n",
+                  frames, frames / 2);
+
+          frames = 0;
+          status_last = millis();
+      }
   }
 }
