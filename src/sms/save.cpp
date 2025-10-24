@@ -15,7 +15,7 @@
 
 static uint8_t* g_sram = NULL;
 static size_t   g_sram_len = 0;
-static char     g_save_path[PATH_MAX] = {0};
+static char*    g_save_path = nullptr;
 static uint32_t g_crc_last = 0;
 static TickType_t g_next_check = 0;
 static TickType_t g_next_allowed_write = 0;
@@ -25,7 +25,14 @@ static void ensure_dir(void){
 }
 
 static uint32_t crc32_update(uint32_t crc, const uint8_t *buf, size_t len){
-  static uint32_t T[256]; static int init=0;
+  static uint32_t* T = nullptr;
+  static int init = 0;
+
+  if (!T) {
+    T = (uint32_t*)malloc(256 * sizeof(uint32_t));
+    if (!T) abort();
+  }
+
   if(!init){ for(uint32_t i=0;i<256;i++){ uint32_t c=i; for(int k=0;k<8;k++) c=(c&1)?(0xEDB88320^(c>>1)):(c>>1); T[i]=c; } init=1; }
   crc^=0xFFFFFFFFU; for(size_t i=0;i<len;i++) crc=T[(crc^buf[i])&0xFF]^ (crc>>8); return crc^0xFFFFFFFFU;
 }
@@ -87,9 +94,13 @@ static void flush_now(void){
 }
 
 void sms_save_init(const char* romName, uint8_t* sramPtr, size_t sramLen){
+  if (!g_save_path) {
+    g_save_path = (char*)malloc(PATH_MAX);
+    if (!g_save_path) abort();
+  }
   g_sram = sramPtr;
   g_sram_len = sramLen;
-  make_save_path_from_name(g_save_path, sizeof(g_save_path), romName);
+  make_save_path_from_name(g_save_path, PATH_MAX, romName);
   g_crc_last = (g_sram && g_sram_len) ? crc32_update(0, g_sram, g_sram_len) : 0;
   g_next_check = g_next_allowed_write = 0;
 }
