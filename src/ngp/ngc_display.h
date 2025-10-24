@@ -9,14 +9,16 @@
 extern "C" {
 #endif
 
-// Framebuffer utilisé par graphics.cpp (RGB565 160x152)
+// Framebuffer
 extern unsigned short *drawBuffer;
+extern volatile unsigned g_frame_ready;
+extern volatile unsigned g_frame_counter;
 
-// Initialisation de la couche display (à appeler une fois au boot)
+// Init
 void ngc_display_init(void);
+void ngc_display_set_parity(bool odd);
 
-// Appelée par graphics.cpp en VBlank pour pousser l’image vers l’écran.
-// Version entrelacée : n’écrit qu’une ligne sur deux par frame.
+// Draw frame
 void graphics_paint(unsigned char render);
 
 #ifdef __cplusplus

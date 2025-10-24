@@ -3,12 +3,15 @@
 #include "ngc_display.h"
 #include <M5Cardputer.h>
 #include <string.h>
+#include <atomic>
 
 // Framebuffer NGPC 160x152
 static uint16_t* s_fb = nullptr;
 unsigned short *drawBuffer = s_fb; 
 int ngpZoomPercent = 100;
 bool ngpFullscreen =  true;
+volatile unsigned g_frame_ready = 0;
+volatile unsigned g_frame_counter = 0;
 
 // Line buffers
 static uint16_t s_linebuf_panel[240];    // largeur cardputer
@@ -25,6 +28,29 @@ static bool s_lut_ready = false;
 
 // Entrelacement odd/even
 static bool s_interlace_parity = false;
+
+extern "C" void ngc_display_init(void)
+{
+  const size_t fbBytes = (size_t)NGPC_W * (size_t)NGPC_H * sizeof(uint16_t);
+  if (!s_fb) {
+    s_fb = (uint16_t*)heap_caps_malloc(fbBytes, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    if (!s_fb) s_fb = (uint16_t*)malloc(fbBytes);  // fallback
+  }
+
+  if (s_fb) {
+    memset(s_fb, 0, fbBytes);
+    drawBuffer = s_fb;
+  } else {
+    drawBuffer = nullptr;
+  }
+
+  M5.Display.setSwapBytes(true);
+  M5.Display.fillScreen(TFT_BLACK);
+}
+
+extern "C" void ngc_display_set_parity(bool odd) {
+  s_interlace_parity = odd;
+}
 
 static void build_scale_luts()
 {
@@ -58,27 +84,7 @@ static void build_scale_luts()
   s_lut_ready = true;
 }
 
-
-extern "C" void ngc_display_init(void)
-{
-  const size_t fbBytes = (size_t)NGPC_W * (size_t)NGPC_H * sizeof(uint16_t);
-  if (!s_fb) {
-    s_fb = (uint16_t*)heap_caps_malloc(fbBytes, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
-    if (!s_fb) s_fb = (uint16_t*)malloc(fbBytes);  // fallback
-  }
-
-  if (s_fb) {
-    memset(s_fb, 0, fbBytes);
-    drawBuffer = s_fb;
-  } else {
-    drawBuffer = nullptr;
-  }
-
-  M5.Display.setSwapBytes(true);
-  M5.Display.fillScreen(TFT_BLACK);
-}
-
-static inline void paint_fullscreen_stretch()
+static inline IRAM_ATTR void paint_fullscreen_stretch()
 {
   const int panelW = 240;
   const int panelH = 135;
@@ -118,7 +124,7 @@ static inline void paint_fullscreen_stretch()
   M5.Display.endWrite();
 }
 
-static inline void paint_fullheight_4x3()
+static inline IRAM_ATTR void paint_fullheight_4x3()
 {
   const int panelW = 240;
   const int panelH = 135;
@@ -147,9 +153,7 @@ static inline void paint_fullheight_4x3()
   M5.Display.endWrite();
 }
 
-
-
-extern "C" void graphics_paint(unsigned char render)
+extern "C" IRAM_ATTR void graphics_paint(unsigned char render)
 {
   if (!render || !drawBuffer) return;
   if (!s_lut_ready) build_scale_luts();
