@@ -61,7 +61,6 @@ void tlcs_init(void);
 void tlcs_reinit(void);
 /* execute interrupt */
 void tlcs_interrupt_wrapper(int irq);
-void ngpc_run(void);
 #ifdef FRAMESKIP
 void tlcs_execute(int cycles, int skipFrames); /* skipFrames=how many frames to skip for each frame rendered */
 #else

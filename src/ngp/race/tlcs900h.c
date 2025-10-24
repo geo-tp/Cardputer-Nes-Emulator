@@ -90,6 +90,22 @@ extern int fixsoundmahjong;
 
 unsigned char Ztable[256];            // zero and sign flags table for faster setting
 unsigned char SZtable[256];            // zero and sign flags table for faster setting
+extern unsigned char *ngpScY;
+int ngOverflow = 0;
+
+#ifdef FRAMESKIP
+#ifndef RENDER_NUM
+#define RENDER_NUM 1
+#endif
+#ifndef RENDER_DEN
+#define RENDER_DEN 5
+#endif
+
+// Etat frameskip
+static int s_framePatternIdx = 0;
+// Flag render
+static bool s_doRenderThisFrame = true;
+#endif
 
 //#define USE_PARITY_TABLE  //this is currently broken!
 #ifdef USE_PARITY_TABLE
@@ -8274,112 +8290,56 @@ static int tlcs_step(void)
     return /*tlcsClockMulti * */ clocks;
 }
 
-
-extern unsigned char *ngpScY;
-int ngOverflow = 0;
-
-// #ifdef FRAMESKIP
-// void tlcs_execute(int cycles, int skipFrames)// skipFrames=how many frames to skip for each frame rendered
-// #else
+#ifdef FRAMESKIP
+void tlcs_execute(int cycles, int skipframe )
+#else
 void tlcs_execute(int cycles)
-// #endif
+#endif
 {
     int elapsed;
     int hCounter = ngOverflow;
 
-#ifdef FRAMESKIP
-    int frame = skipFrames;
-#endif
-
     while(cycles > 0)
     {
-        /* AKTODO */
-        /* TODO/FIXME - perhaps this is too fast as a default? */
-        if (1)
-        {
-            //call a bunch of steps
-            for (elapsed = tlcs_step();elapsed<(515>>(tlcsClockMulti-1)); elapsed += tlcs_step());
-        }
-        else
-        {
-            //call enough steps that would fit in the smallest timer increment
-            for (elapsed = tlcs_step();elapsed<56; elapsed += tlcs_step());
-        }
+        for (elapsed = tlcs_step(); elapsed < (515 >> (tlcsClockMulti - 1)); elapsed += tlcs_step());
         tlcsTimers(elapsed);
-        elapsed*=tlcsClockMulti;
+        elapsed *= tlcsClockMulti;
         soundStep(elapsed);
 
-        hCounter-= elapsed;
+        hCounter -= elapsed;
 
         if (hCounter < 0)
         {
-            // time equivalent to 1 horizontal line has passed
 #ifdef FRAMESKIP
-            myGraphicsBlitLine(frame==0);
+            myGraphicsBlitLine(s_doRenderThisFrame);
 #else
             myGraphicsBlitLine(true);
 #endif
+            hCounter += 515;
 
-            //NOTA     
-            
-            hCounter+= 515;
-            // now check what needs to be done at the
-            // beginning of this new line
-            // NOTA originalmente *scanlineY == 199 arregla Gals Fighter
+            // Début de ligne: HBlank ou VBlank
             if (*scanlineY < 151 || *scanlineY == finscan)
             {
                 // HBlank
-                if (tlcsMemReadB(0x8000)&0x40)    
-                 tlcsTI0();
+                if (tlcsMemReadB(0x8000) & 0x40)
+                    tlcsTI0();
 
             }
             else if (*scanlineY == 152)
             {
-                // VBlank
-                if (tlcsMemReadB(0x8000)&0x80)
+                // VBlank (fin de frame logique)
+                if (tlcsMemReadB(0x8000) & 0x80)
                     tlcs_interrupt(2);
+
 #ifdef FRAMESKIP
-                if(frame == 0)
-                    frame = skipFrames;
-                else
-                    frame--;
+                // Avancer pattern pour prochaine frame
+                s_framePatternIdx = (s_framePatternIdx + 1) % RENDER_DEN;
+                s_doRenderThisFrame = (s_framePatternIdx < RENDER_NUM);
 #endif
             }
-
         }
-        cycles-= elapsed;
+
+        cycles -= elapsed;
     }
     ngOverflow = hCounter + cycles;
-
-    //MHE used to sound update here!?!?
 }
-
-void ngpc_run(void)
-{
-    printf("[NGPC_RUN] starting core loop\n");
-
-    unsigned long status_last = millis();
-    unsigned long frames = 0;
-
-    while (m_bIsActive)
-    {
-        // Exécuter un frame CPU approx 6MHz/60
-        tlcs_execute((6 * 1024 * 1024) / 60);
-
-        frames++;
-
-        if (millis() - status_last >= 2000)
-        {
-            // juste un framerate toutes les 2 secondes
-            printf("[NGPC_RUN] %lu frames / 2s (~%lu FPS)\n",
-                   frames, frames / 2);
-
-            frames = 0;
-            status_last = millis();
-        }
-    }
-
-    printf("[NGPC_RUN] loop EXIT\n");
-}
-
-
