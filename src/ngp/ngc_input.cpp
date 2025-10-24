@@ -44,7 +44,6 @@ extern "C" uint32_t ngc_input_poll(void) {
 
   if (M5Cardputer.Keyboard.isChange() && M5Cardputer.Keyboard.isKeyPressed('\\')) {
     ngpFullscreen = !ngpFullscreen;
-    M5Cardputer.Display.fillScreen(TFT_BLACK);
   }
 
   // -------- DIRECTIONS --------
