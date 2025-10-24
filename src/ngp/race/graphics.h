@@ -71,7 +71,6 @@ void myGraphicsBlitLine(unsigned char render);
 
 extern uint16_t totalpalette[16*16*16];
 extern uint16_t palettes[16*4+16*4+16*4];
-extern unsigned short *drawBuffer;
 #define NGPC_TO_SDL16(col) totalpalette[col & 0x0FFF]
 
 #define setColPaletteEntry(addr, data) palettes[(addr)] = NGPC_TO_SDL16(data)

@@ -31,6 +31,7 @@
 extern struct ngp_screen* screen;
 extern int gfx_hacks;
 extern int finscan;
+extern volatile unsigned g_frame_ready;
 
 /*
  * 16-bit graphics buffers
@@ -542,10 +543,6 @@ static inline uint16_t bg_color()
   return 0x0000;                                     // fallback noir
 }
 
-#ifndef NGP_BLIT_VERBOSE
-#define NGP_BLIT_VERBOSE 0
-#endif
-
 static inline uint8_t ngpc_ifr(void) {
     return tlcsMemReadB(0x00008010);
 }
@@ -674,7 +671,8 @@ void myGraphicsBlitLine(unsigned char render)
         if (y == 151u) {
             const uint8_t ifr = tlcsMemReadB(0x00008010);
             tlcsMemWriteB(0x00008010, (uint8_t)(ifr | 0x40));
-            graphics_paint(render);
+            // graphics_paint(render);
+            g_frame_ready = 1;
         }
 
         *scanlineY = (uint8_t)(y + 1);
