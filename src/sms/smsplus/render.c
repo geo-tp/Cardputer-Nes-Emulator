@@ -11,9 +11,9 @@ uint8 *linebuf;
 #define CACHEDTILES 512
 #define ALIGN_DWORD 1 //esp doesn't support unaligned word writes
 
-int16 cachePtr[512*4];				//(tile+attr<<9) -> cache tile store index (i<<6); -1 if not cached
-uint8 cacheStore[CACHEDTILES*64];	//Tile store
-uint8 cacheStoreUsed[CACHEDTILES];	//Marks if a tile is used
+static int16_t *cachePtr = NULL;              // (tile+attr<<9) -> cache tile store index (i<<6); -1 if not cached
+static uint8_t *cacheStore = NULL;            // Tile store
+static uint8_t *cacheStoreUsed = NULL;        // Marks if a tile is used
 
 uint8 is_vram_dirty;
 
@@ -45,6 +45,28 @@ void render_obj(int line);
 void palette_sync(int index);
 void render_reset(void);
 void render_init(void);
+
+static int render_alloc_buffers(void) {
+    if (cachePtr && cacheStore && cacheStoreUsed) return 1;
+
+    cachePtr       = (int16_t*) malloc(sizeof(int16_t) * (512*4));
+    cacheStore     = (uint8_t*) malloc((size_t)CACHEDTILES * 64);
+    cacheStoreUsed = (uint8_t*) malloc((size_t)CACHEDTILES);
+
+    if (!cachePtr || !cacheStore || !cacheStoreUsed) {
+        free(cachePtr);       cachePtr = NULL;
+        free(cacheStore);     cacheStore = NULL;
+        free(cacheStoreUsed); cacheStoreUsed = NULL;
+        return 0;
+    }
+    return 1;
+}
+
+static void render_free_buffers(void) {
+    free(cachePtr);       cachePtr = NULL;
+    free(cacheStore);     cacheStore = NULL;
+    free(cacheStoreUsed); cacheStoreUsed = NULL;
+}
 
 void vramMarkTileDirty(int index) {
 	int i=index;
@@ -213,6 +235,7 @@ void render_init(void)
     }
 
 #endif
+    render_alloc_buffers();
     render_reset();
 }
 

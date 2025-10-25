@@ -32,19 +32,25 @@ static char       g_rompath_for_saves[PATH_MAX] = {0};
 /* CRC32 standard */
 static uint32_t crc32_update(uint32_t crc, const uint8_t *buf, size_t len)
 {
-    static uint32_t table[256];
+    static uint32_t* table = NULL;
     static int inited = 0;
+
     if (!inited) {
-        for (uint32_t i=0;i<256;i++){
-            uint32_t c=i;
-            for (int k=0;k<8;k++)
-                c = (c & 1U) ? (0xEDB88320U ^ (c>>1)) : (c>>1);
-            table[i]=c;
+        if (!table) {
+            table = (uint32_t*)malloc(256 * sizeof(uint32_t));
+            if (!table) abort();
+        }
+        for (uint32_t i = 0; i < 256; i++){
+            uint32_t c = i;
+            for (int k = 0; k < 8; k++)
+                c = (c & 1U) ? (0xEDB88320U ^ (c >> 1)) : (c >> 1);
+            table[i] = c;
         }
         inited = 1;
     }
+
     crc ^= 0xFFFFFFFFU;
-    for (size_t i=0;i<len;i++)
+    for (size_t i = 0; i < len; i++)
         crc = table[(crc ^ buf[i]) & 0xFFU] ^ (crc >> 8);
     return crc ^ 0xFFFFFFFFU;
 }

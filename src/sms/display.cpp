@@ -29,7 +29,7 @@ static inline uint16_t rgb888_to_565(uint32_t c){
 }
 
 // Palette fixe SMS
-DRAM_ATTR static const uint32_t sms_palette_rgb[256] __attribute__((aligned(4))) = {
+static const uint32_t sms_palette_rgb[256] __attribute__((aligned(4))) = {
   0x00000000,0x00000048,0x000000B4,0x000000FF,0x00002400,0x00002448,0x000024B4,0x000024FF,
   0x00004800,0x00004848,0x000048B4,0x000048FF,0x00006C00,0x00006C48,0x00006CB4,0x00006CFF,
   0x00009000,0x00009048,0x000090B4,0x000090FF,0x0000B400,0x0000B448,0x0000B4B4,0x0000B4FF,
@@ -135,23 +135,23 @@ static inline void compute_common(bool fullscreenMode){
 void video_compute_scaler_full()   { compute_common(true);  }
 void video_compute_scaler_square() { compute_common(false); }
 
-// Skip-line (phase)
-static uint8_t s_skip_phase = 0;
-#define SKIP_PERIOD 2
-#define SKIP_INDEX  1
-
 IRAM_ATTR void sms_display_write_frame() {
   M5.Display.startWrite();
-  const uint8_t phase = s_skip_phase;
+
+  M5.Display.setAddrWindow(offX, offY, dstW, dstH);
+
+  const uint16_t* pal = sms_palette_565;
+  const uint16_t* sx  = xmap;
+
   int last_sy = -1;
+
   for (int y = 0; y < dstH; ++y) {
     const int sy = ymap[y];
-    const uint8_t* srcLine = bitmap.data + sy * bitmap.pitch;
 
     if (sy != last_sy) {
-      const uint16_t* pal = sms_palette_565;
-      const uint16_t* sx  = xmap;
+      const uint8_t* srcLine = bitmap.data + sy * bitmap.pitch;
       uint16_t* out = lineBuf;
+
       int x = 0;
       for (; x + 8 <= dstW; x += 8) {
         out[x + 0] = pal[srcLine[sx[x + 0]]];
@@ -164,15 +164,13 @@ IRAM_ATTR void sms_display_write_frame() {
         out[x + 7] = pal[srcLine[sx[x + 7]]];
       }
       for (; x < dstW; ++x) out[x] = pal[srcLine[sx[x]]];
+
       last_sy = sy;
     }
-
-    M5.Display.setWindow(offX, offY + y, offX + dstW - 1, offY + y);
-    M5.Display.writePixels(lineBuf, dstW);
+      M5.Display.writePixels(lineBuf, dstW, true);
   }
-  M5.Display.endWrite();
 
-  s_skip_phase = (uint8_t)((phase + 1) % SKIP_PERIOD);
+  M5.Display.endWrite();
 }
 
 void sms_display_clear() {

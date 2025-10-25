@@ -11,7 +11,10 @@
 #include <string.h>
 #include "nes/run_nes.h"
 #include "sms/run_sms.h"
+#include "ngp/run_ngp.h"
 #include "last_game.h"
+#define RETRO_COMPAT_IMPLEMENTATION
+#include "ngp/race/retro_compat.h"
 
 void setup() {
   auto cfg = M5.config();
@@ -22,7 +25,6 @@ void setup() {
   SdService sd;
   CardputerView display;
   display.initialize();
-
   // SD
   while (!sd.begin()) {
     display.topBar("SD CARD FOR ROMS", false, false);
@@ -37,7 +39,7 @@ void setup() {
   if (isQuittingGame()) {
     romPath = getRomPath(sd, display, input, romFolder, true);
   } else {
-      // Welcome
+    // Welcome
     display.welcome();
     input.waitPress();
 
@@ -50,6 +52,8 @@ void setup() {
       romPath = "/sd" + romPath; // ensure sd prefix
     }
   }
+
+  printf("Selected ROM: %s\n", romPath.c_str());
 
   display.topBar("COPYING TO FLASH", false, false);
   display.subMessage("Loading...", 0);
@@ -73,6 +77,8 @@ void setup() {
       delay(1500);
     }
   }
+
+  input.flushInput(10); // flush any input just in case
 
   // Map the ROM partition in XIP
   if (xip_map_rom_partition("spiffs", romSize) != 0) {
@@ -124,11 +130,11 @@ void setup() {
   // Prepare rom filename for emulators
   auto pos = romPath.find_last_of("/\\");
   std::string romName = (pos == std::string::npos) ? romPath : romPath.substr(pos + 1);
-  static char romArg[256];
-
+  
   // Run the emulator
   if (ext == ROM_TYPE_NES) {
-      // --- NES ---
+    // --- NES ---
+      char romArg[256];
       std::snprintf(romArg, sizeof(romArg), "/xip/%s", romName.c_str());
       run_nes(romArg);
   }
@@ -136,6 +142,11 @@ void setup() {
       // --- Master System / Game Gear ---
       bool isGG = (ext == ROM_TYPE_GAMEGEAR);
       run_sms(_get_rom_ptr(), _get_rom_size(), isGG, romName.c_str());
+  }
+  else if (ext == ROM_TYPE_NGP) {
+      // --- Neo Geo Pocket ---
+      int machine = detectNeoGeoPocketFromRom(_get_rom_ptr(), _get_rom_size(), romPath);
+      run_ngp(_get_rom_ptr(), _get_rom_size(), machine);
   }
   else {
       display.topBar("ERROR", false, false);
