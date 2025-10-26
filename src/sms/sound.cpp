@@ -11,7 +11,7 @@ static constexpr int kSampleRate = 22050;   // Hz
 static constexpr int kChannel    = 0;
 static constexpr int   kChunk      = 128; 
 
-static int16_t s_buf[2][512];
+static int16_t s_buf[2][1024];
 static uint8_t s_flip = 0;
 
 static inline int clamp16(int x){ return x < -32768 ? -32768 : (x > 32767 ? 32767 : x); }
