@@ -10,13 +10,14 @@ uint8 *linebuf;
 //Each tile takes up 8*8=64 bytes. We have 512 tiles * 4 attribs, so 2K tiles max.
 #define CACHEDTILES 512
 #define ALIGN_DWORD 1 //esp doesn't support unaligned word writes
+#define TILE_BYTES      64
+#define MAX_TILE_KEYS   (512*4)      // 2K entrées (tile + attr<<9)
 
 static int16_t *cachePtr = NULL;              // (tile+attr<<9) -> cache tile store index (i<<6); -1 if not cached
 static uint8_t *cacheStore = NULL;            // Tile store
 static uint8_t *cacheStoreUsed = NULL;        // Marks if a tile is used
 
 uint8 is_vram_dirty;
-
 int cacheKillPtr=0;
 int freePtr=0;
 
@@ -49,9 +50,9 @@ void render_init(void);
 static int render_alloc_buffers(void) {
     if (cachePtr && cacheStore && cacheStoreUsed) return 1;
 
-    cachePtr       = (int16_t*) malloc(sizeof(int16_t) * (512*4));
-    cacheStore     = (uint8_t*) malloc((size_t)CACHEDTILES * 64);
-    cacheStoreUsed = (uint8_t*) malloc((size_t)CACHEDTILES);
+    cachePtr       = (int16_t*) malloc(sizeof(int16_t) * MAX_TILE_KEYS);
+    cacheStore     = (uint8_t*)  malloc((size_t)CACHEDTILES * TILE_BYTES);
+    cacheStoreUsed = (uint8_t*)  malloc((size_t)CACHEDTILES);
 
     if (!cachePtr || !cacheStore || !cacheStoreUsed) {
         free(cachePtr);       cachePtr = NULL;
@@ -59,6 +60,13 @@ static int render_alloc_buffers(void) {
         free(cacheStoreUsed); cacheStoreUsed = NULL;
         return 0;
     }
+
+    memset(cachePtr, 0xFF, sizeof(int16_t) * MAX_TILE_KEYS);
+    memset(cacheStoreUsed, 0, (size_t)CACHEDTILES);
+    memset(cacheStore, 0, (size_t)CACHEDTILES * TILE_BYTES);
+
+    is_vram_dirty = 1;
+
     return 1;
 }
 
@@ -238,7 +246,6 @@ void render_init(void)
     render_alloc_buffers();
     render_reset();
 }
-
 
 /* Reset the rendering data */
 void render_reset(void)
