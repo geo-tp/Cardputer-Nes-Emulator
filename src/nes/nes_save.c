@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <sys/stat.h>
-
+#include <unistd.h> 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
@@ -76,18 +76,51 @@ static void make_save_path(char *dst, size_t dstlen)
     dst[dstlen-1] = '\0';
 }
 
+static void make_tmp_path(char *dst, size_t dstlen, const char *final_path)
+{
+    snprintf(dst, dstlen, "%s.tmp", final_path);
+    dst[dstlen - 1] = '\0';
+}
+
 static void sram_autosave_flush(void)
 {
     if (!g_sram_ptr || g_sram_len == 0) return;
+
+    // Make paths
     char path[PATH_MAX];
     make_save_path(path, sizeof(path));
-    FILE *f = fopen(path, "wb");
+    char tmp[PATH_MAX];
+    make_tmp_path(tmp, sizeof(tmp), path);
+    ensure_saves_dir();
+
+    // temp file
+    FILE *f = fopen(tmp, "wb");
     if (!f) {
-        nofrendo_log_printf("SRAM autosave: fopen fail (%s)\n", path);
+        nofrendo_log_printf("SRAM autosave: fopen tmp fail (%s)\n", tmp);
         return;
     }
+    
+    // Write SRAM to temp file
+    setvbuf(f, NULL, _IONBF, 0);
     size_t w = fwrite(g_sram_ptr, 1, g_sram_len, f);
+    fflush(f);
+    fsync(fileno(f));
     fclose(f);
+
+    if (w != g_sram_len) {
+        nofrendo_log_printf("SRAM autosave: short write %u/%u to %s\n",
+                            (unsigned)w, (unsigned)g_sram_len, tmp);
+        // something wrong, keep temp file for inspection
+        return;
+    }
+
+    // Replace old save with new one
+    unlink(path);
+    if (rename(tmp, path) != 0) {
+        nofrendo_log_printf("SRAM autosave: rename failed %s -> %s\n", tmp, path);
+        return;
+    }
+
     nofrendo_log_printf("SRAM autosave: wrote %u/%u bytes -> %s\n",
                         (unsigned)w, (unsigned)g_sram_len, path);
 }
