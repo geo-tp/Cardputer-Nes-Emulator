@@ -12,6 +12,7 @@ int ngpZoomPercent = 100;
 bool ngpFullscreen =  true;
 volatile unsigned g_frame_ready = 0;
 volatile unsigned g_frame_counter = 0;
+bool s_lastScreenMode = ngpFullscreen;
 
 // Line buffers
 static uint16_t s_linebuf_panel[240];    // largeur cardputer
@@ -157,7 +158,13 @@ extern "C" IRAM_ATTR void graphics_paint(unsigned char render)
 {
   if (!render || !drawBuffer) return;
   if (!s_lut_ready) build_scale_luts();
+  
+  if (s_lastScreenMode && !ngpFullscreen) {
+    M5.Display.fillScreen(TFT_BLACK);
+  }
 
+  s_lastScreenMode = ngpFullscreen;
+  
   if (ngpFullscreen) {
     paint_fullscreen_stretch();
   } else {
