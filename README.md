@@ -1,7 +1,9 @@
 # Cardputer Game Station
 
-![Emulator screen captures on the M5Stack Cardputer](nes_emulator_s.jpg)
-![Emulator screen captures on the M5Stack Cardputer](sms_emulator_s.jpg)
+![NES emulator screen captures on the M5Stack Cardputer](nes_emulator_s.jpg)
+![SMS emulator screen captures on the M5Stack Cardputer](sms_emulator_s.jpg)
+![NGP emulator screen captures on the M5Stack Cardputer](ngp_emulator_s.jpg)
+
 
 Powered by [Nofrendo](https://github.com/moononournation/arduino-nofrendo), **Smsplus** and [Race](https://github.com/libretro/RACE). 
 
