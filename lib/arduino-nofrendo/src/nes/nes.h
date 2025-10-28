@@ -107,6 +107,7 @@ extern void nes_reset(int reset_type);
 
 extern void nes_poweroff(void);
 extern void nes_togglepause(void);
+extern bool nes_pausestate(void);
 
 #endif /* _NES_H_ */
 

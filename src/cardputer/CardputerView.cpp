@@ -138,6 +138,30 @@ void CardputerView::welcome() {
     Display->printf("%s", press.c_str());
 }
 
+void CardputerView::pauseScreen() {
+    // some constants
+    const int boxW = 100;
+    const int boxH = 50;
+    const int boxX = (Display->width() - boxW) / 2;
+    const int boxY = (Display->height() - boxH) / 2;
+    const int textOffset = 25;
+
+    // do a background and a box
+    Display->fillScreen(BACKGROUND_COLOR);
+
+    Display->fillRoundRect(boxX, boxY, boxW, boxH, DEFAULT_ROUND_RECT, RECT_COLOR_DARK);
+    Display->drawRoundRect(boxX, boxY, boxW, boxH, DEFAULT_ROUND_RECT, PRIMARY_COLOR);
+
+    // kay now for sum text
+    std::string paused = "Paused";
+
+    Display->setTextColor(TEXT_COLOR);
+    Display->setTextSize(TEXT_BIG);
+
+    Display->setCursor(getCenterOffset(paused) + 1, boxY + textOffset);
+    Display->printf("%s", paused.c_str()); 
+}
+
 void CardputerView::topBar(const std::string& title, bool submenu, bool searchBar) {
     uint8_t marginX = 4;
     uint8_t marginY = 14;

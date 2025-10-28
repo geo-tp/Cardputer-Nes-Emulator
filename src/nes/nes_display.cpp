@@ -3,6 +3,9 @@ extern "C" {
 }
 
 #include <M5Unified.h>
+#include "display/CardputerView.h"
+#include "input/CardputerInput.h"
+
 
 int16_t frame_scaling;
 static uint16_t* s_nesLineBuf = nullptr;
@@ -129,6 +132,19 @@ void display_write_frame_zoom(const uint8_t *data[]) {
 }
 
 void display_write_frame(const uint8_t *data[]) {
+    // this might not be the best spot for this
+    if (nes_pausestate()) {
+        CardputerInput input;
+        CardputerView display;
+
+        display.initialize();
+        display.pauseScreen();
+
+        input.waitPress();
+        delay(100); // this is so it can't do a pause-unpause stutter
+        nes_togglepause();
+    }
+    
     if (!fullscreenMode) {
         display_write_frame_square(data);
         return;

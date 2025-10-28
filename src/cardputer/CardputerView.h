@@ -39,6 +39,7 @@ public:
     uint8_t getBrightness();
     void welcome();
     void showKeymapping();
+    void pauseScreen();
     void topBar(const std::string& title, bool submenu, bool searchBar);
     void horizontalSelection(const std::vector<std::string>& options, uint16_t selectedIndex, const std::string& description1="", const std::string& description2="", const std::vector<std::string>& icons={});
     void verticalSelection(
