@@ -82,7 +82,7 @@ void CardputerView::welcome() {
     Display->drawRoundRect(10, 13, 217, 30, 5, PRIMARY_COLOR);
 
     // Title
-    std::string title = "Game Station 0.3";
+    std::string title = "Game Station 0.4";
     Display->setTextColor(TEXT_COLOR);
     Display->setTextSize(TEXT_BIG);
     Display->setCursor(getCenterOffset(title), 28);
@@ -100,7 +100,7 @@ void CardputerView::welcome() {
     Display->setTextSize(TEXT_MEDIUM);
     // Ligne consoles (multicolore)
     int y = boxY + 17;
-    int x = getCenterOffset("NES - Game Gear - Master System");
+    int x = getCenterOffset("NES - SMS - GG - NGP");
 
     Display->setCursor(x, y);
     Display->setTextColor(NES_COLOR);
@@ -109,14 +109,20 @@ void CardputerView::welcome() {
     Display->setTextColor(TEXT_COLOR);
     Display->print(" - ");
 
-    Display->setTextColor(GAMEGEAR_COLOR);
-    Display->print("Game Gear");
+    Display->setTextColor(SMS_COLOR);
+    Display->print("SMS");
 
     Display->setTextColor(TEXT_COLOR);
     Display->print(" - ");
 
-    Display->setTextColor(SMS_COLOR);
-    Display->print("Master System");
+    Display->setTextColor(GAMEGEAR_COLOR);
+    Display->print("GG");
+
+    Display->setTextColor(TEXT_COLOR);
+    Display->print(" - ");
+
+    Display->setTextColor(NEOGEO_COLOR);
+    Display->print("NGC");
 
     Display->setTextSize(TEXT_MEDIUM);
     Display->setTextColor(TEXT_COLOR);
@@ -333,6 +339,8 @@ void CardputerView::verticalSelectionSimple(
             Display->setTextColor(SMS_COLOR);
         else if (ext == "gg" && !isSelected)
             Display->setTextColor(GAMEGEAR_COLOR);
+        else if ((ext == "ngp" || ext == "ngc") && !isSelected)
+            Display->setTextColor(NEOGEO_COLOR);
         else if (ext.empty()) {
             if ( !isSelected) {
                 Display->setTextColor(FOLDER_COLOR);

@@ -25,6 +25,7 @@ void setup() {
   SdService sd;
   CardputerView display;
   display.initialize();
+
   // SD
   while (!sd.begin()) {
     display.topBar("SD CARD FOR ROMS", false, false);
@@ -73,8 +74,10 @@ void setup() {
   if (!copyFileToPartition(romPath.c_str(), romPart, &romSize)) {
     while (1) {
       display.topBar("ERROR", false, false);
-      display.subMessage("SD to Flash failed", 0);
-      delay(1500);
+      display.subMessage("SD to Flash failed", 1500);
+      display.subMessage("Launcher max rom 1MB", 1500);
+      display.subMessage("Flash this firmware", 1500);
+      display.subMessage("to unlock full 4MB", 1500);
     }
   }
 
@@ -133,7 +136,7 @@ void setup() {
   
   // Run the emulator
   if (ext == ROM_TYPE_NES) {
-    // --- NES ---
+      // --- NES ---
       char romArg[256];
       std::snprintf(romArg, sizeof(romArg), "/xip/%s", romName.c_str());
       run_nes(romArg);

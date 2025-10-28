@@ -82,7 +82,7 @@ static inline std::string getRomPath(SdService& sdService, CardputerView& displa
     display.topBar("LOAD ROM CARTRIDGE", false, false);
 
     if (!skipWelcome) {
-        display.subMessage(".nes .gg .sms files", 2000);
+        display.subMessage(".nes .gg .sms .ngc .ngp", 2000);
     } else {
         display.subMessage("Loading...", 0);
     }
@@ -147,7 +147,8 @@ static inline std::string getRomPath(SdService& sdService, CardputerView& displa
         // file
         } else {
             if (!hasRomExt(nextPath)) {
-                display.subMessage(".sms .gg .nes required", 2000);
+                display.topBar("Supported files", false, false);
+                display.subMessage(".sms .gg .nes .ngc .ngp", 2000);
                 continue; // non rom file
             }
             return "/sd" + nextPath; // file selected

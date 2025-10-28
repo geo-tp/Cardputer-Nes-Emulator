@@ -599,8 +599,6 @@ void ngp_mem_init(void)
 	}
 }
 
-extern const unsigned char* mainrom;  // déjà existant dans race-memory.c
-
 bool ngp_mem_set_rom(const void *rom_base, size_t rom_len)
 {
     if (!rom_base || rom_len == 0)
@@ -609,7 +607,6 @@ bool ngp_mem_set_rom(const void *rom_base, size_t rom_len)
     s_rom_base = (const uint8_t*)rom_base;
     s_rom_size = rom_len;
 
-    // 🔥 injection Race-compatible
     mainrom = (const unsigned char*)rom_base;
 
     return true;

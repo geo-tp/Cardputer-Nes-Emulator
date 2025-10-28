@@ -20,6 +20,7 @@
 #define SMS_COLOR      0x1C9F  // Bleu "SEGA" un peu adouci (≈ #1E90FF)
 #define NES_COLOR      0xFA47  // Rouge chaud légèrement orangé (≈ #FF4A3D)
 #define GAMEGEAR_COLOR 0xC29F  // Violet/magenta lumineux mais pas criard (≈ #C050FF)
+#define NEOGEO_COLOR   0x021F // Bleu très foncé (≈ #002060)
 #define FOLDER_COLOR   0xFEC0  // Jaune pâle (≈ #F6EB61)
 
 // TEXT SIZE
