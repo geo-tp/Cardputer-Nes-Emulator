@@ -7,11 +7,11 @@
 #define LINES_PER_FRAME     (262)
 #define FRAMES_PER_SECOND   (60)
 #define CYCLES_PER_LINE     ((MASTER_CLOCK / FRAMES_PER_SECOND) / LINES_PER_FRAME)
-
+#define SMS_VDP_VRAM_SIZE 0x4000
 /* VDP context */
 typedef struct
 {
-    uint8 vram[0x4000];
+    uint8 *vram;
     uint8 cram[0x40]; 
     uint8 reg[0x10];  
     uint8 status;     
@@ -40,6 +40,7 @@ uint8 vdp_hcounter_r(void);
 void vdp_data_w(int data);
 int vdp_data_r(void);
 void vdp_run(void);
+int vdp_init_vram(void);
 
 #endif /* _VDP_H_ */
 

@@ -44,6 +44,7 @@ extern void z80_state_save(void *file);
 extern void z80_state_load(void *file);
 extern const char *z80_info(void *context, int regnum);
 extern unsigned z80_dasm(char *buffer, unsigned pc);
+extern int z80_allocate_flag_tables(void);
 
 #ifdef MAME_DEBUG
 extern unsigned DasmZ80(char *buffer, unsigned pc);

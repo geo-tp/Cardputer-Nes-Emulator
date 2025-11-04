@@ -71,6 +71,7 @@ void sms_display_init() {
   free(xmap);
   free(ymap);
   free(sms_palette_565);
+  vdp_init_vram();
 
   // Alloc
   lineBuf         = (uint16_t*)malloc(LCD_W * sizeof(uint16_t));
@@ -79,12 +80,12 @@ void sms_display_init() {
   sms_palette_565 = (uint16_t*)malloc(256   * sizeof(uint16_t));
 
   if (!lineBuf || !xmap || !ymap || !sms_palette_565) {
-    Serial.println("Erreur d'allocation display buffers !");
+    printf("Erreur d'allocation display buffers !\n");
     while (true) delay(100);
   }
 
   M5.Display.fillScreen(TFT_BLACK);
-  Serial.printf("Display init: %dx%d OK\n", LCD_W, LCD_H);
+  printf("Display init: %dx%d OK\n", LCD_W, LCD_H);
 }
 
 void sms_palette_init_fixed(){

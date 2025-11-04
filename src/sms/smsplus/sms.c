@@ -5,6 +5,20 @@ void ym2413_write(int chip, int offset, int data);
 /* SMS context */
 t_sms sms;
 
+/* Allocate SMS RAM */
+int sms_init_ram(void)
+{
+    if (sms.ram) return 1;
+
+    uint8 *wram = (uint8*)malloc(0x2000);
+    if (!wram) return 0;
+
+    memset(wram, 0, 0x2000);
+    sms.ram = wram;
+
+    return 1;
+}
+
 /* Run the virtual console emulation for one frame */
 void sms_frame(int skip_render)
 {
@@ -79,7 +93,7 @@ void sms_frame(int skip_render)
 
 
 void sms_init(void)
-{
+{   
     cpu_reset();
     sms_reset();
 }

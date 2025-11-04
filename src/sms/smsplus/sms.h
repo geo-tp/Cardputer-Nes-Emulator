@@ -9,7 +9,7 @@
 typedef struct
 {
     uint8 *dummy; //JMD: Point this into outher space plz.
-    uint8 ram[0x2000];
+    uint8 *ram;
 //    uint8 sram[0x8000];
     uint8 *sram;
     uint8 fcr[4];
@@ -30,6 +30,7 @@ extern t_sms sms;
 /* Function prototypes */
 void sms_frame(int skip_render);
 void sms_init(void);
+int  sms_init_ram(void);
 void sms_reset(void);
 int  sms_irq_callback(int param);
 void sms_mapper_w(int address, int data);

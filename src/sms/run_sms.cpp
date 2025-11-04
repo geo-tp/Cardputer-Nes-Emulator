@@ -37,7 +37,9 @@ void run_sms(const uint8_t* romPtr, size_t romLen, bool isGG, const char* romNam
   cart.pages = (romLen + 0x3FFF) / 0x4000;
   cart.type  = isGG ? TYPE_GG : TYPE_SMS;
   smsZoomPercent = isGG ? 100 : 110;
-
+  
+  z80_allocate_flag_tables();
+  sms_init_ram();
   emu_system_init(22050);
   system_reset();
 

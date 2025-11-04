@@ -6,6 +6,19 @@
 /* VDP context */
 t_vdp vdp;
 
+int vdp_init_vram(void)
+{
+    if (vdp.vram) return 1; // déjà fait
+
+    void *p = NULL;
+    p = malloc(SMS_VDP_VRAM_SIZE);
+    if (!p) return 0;
+
+    vdp.vram = (uint8*)p;
+    memset(vdp.vram, 0, SMS_VDP_VRAM_SIZE);
+
+    return 1;
+}
 
 /* Return values from the V counter */
 static const uint8_t vcnt[0x200] =

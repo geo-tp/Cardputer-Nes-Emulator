@@ -175,11 +175,26 @@ Z80_Regs *Z80_Context = &Z80;
 static UINT32 EA;
 int after_EI = 0;
 
-static UINT8 SZ[256];		/* zero and sign flags */
-static UINT8 SZ_BIT[256];	/* zero, sign and parity/overflow (=zero) flags for BIT opcode */
-static UINT8 SZP[256];		/* zero, sign and parity flags */
-static UINT8 SZHV_inc[256]; /* zero, sign, half carry and overflow flags INC r8 */
-static UINT8 SZHV_dec[256]; /* zero, sign, half carry and overflow flags DEC r8 */
+static UINT8 *SZ = 0;		/* zero and sign flags */
+static UINT8 *SZ_BIT = 0;	/* zero, sign and parity/overflow (=zero) flags for BIT opcode */
+static UINT8 *SZP = 0;		/* zero, sign and parity flags */
+static UINT8 *SZHV_inc = 0; /* zero, sign, half carry and overflow flags INC r8 */
+static UINT8 *SZHV_dec = 0; /* zero, sign, half carry and overflow flags DEC r8 */
+
+int z80_allocate_flag_tables(void)
+{
+    SZ         = (uint8_t*)malloc(256);
+    SZ_BIT     = (uint8_t*)malloc(256);
+    SZP        = (uint8_t*)malloc(256);
+    SZHV_inc   = (uint8_t*)malloc(256);
+    SZHV_dec   = (uint8_t*)malloc(256);
+
+    if (!SZ || !SZ_BIT || !SZP || !SZHV_inc || !SZHV_dec)
+        return 0;
+
+    return 1;
+}
+
 #include "z80daa.h"
 #if BIG_FLAGS_ARRAY
 #include <signal.h>
