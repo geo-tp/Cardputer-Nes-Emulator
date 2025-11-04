@@ -19,6 +19,7 @@ enum RomType {
     ROM_TYPE_SMS,
     ROM_TYPE_GAMEGEAR,
     ROM_TYPE_NGP,
+    ROM_TYPE_GENESIS
 };
 
 // NGP types
@@ -36,7 +37,7 @@ static inline bool hasRomExt(const std::string& path) {
     for (auto &ch : ext)
         ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
 
-    return (ext == "nes" || ext == "gg" || ext == "sms" || ext == "ngc" || ext == "ngp");
+    return (ext == "nes" || ext == "gg" || ext == "sms" || ext == "ngc" || ext == "ngp" || ext == "md");
 }
 
 static inline int detectNeoGeoPocketFromRom(const uint8_t* rom, size_t size, const std::string& filepath)
@@ -71,6 +72,7 @@ RomType getRomType(const std::string& path) {
     if (ext == "gg")  return ROM_TYPE_GAMEGEAR;
     if (ext == "ngc") return ROM_TYPE_NGP;
     if (ext == "ngp") return ROM_TYPE_NGP;
+    if (ext == "md")  return ROM_TYPE_GENESIS;
 
     return ROM_TYPE_UNKNOWN;
 }
