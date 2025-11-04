@@ -44,7 +44,7 @@ unsigned char bootBlockStartNum = 31;
 /* with selector, I get
 * writeSaveGameFile: Couldn't open Battery//mnt/sd/Games/race/ChryMast.ngf file
 */
-extern char retro_save_directory[2048];
+extern char retro_save_directory[256];
 #define SAVEGAME_DIR retro_save_directory
 
 unsigned char currentWriteCycle = 1;  /* can be 1 through 6 */

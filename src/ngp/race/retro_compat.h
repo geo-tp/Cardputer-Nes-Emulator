@@ -47,7 +47,7 @@ extern EMUINFO m_emuInfo;
 struct ngp_screen;
 extern struct ngp_screen *screen;
 
-extern char retro_save_directory[2048];
+extern char retro_save_directory[256];
 extern int tipo_consola;
 
 // --------- dbg_print stub ----------

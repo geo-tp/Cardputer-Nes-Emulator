@@ -36,11 +36,10 @@ extern volatile unsigned g_frame_ready;
 /*
  * 16-bit graphics buffers
  */
-uint16_t totalpalette[16*16*16];
+#define TOTALPALETTE_SIZE  4096
+uint16_t* totalpalette = NULL;
 static unsigned dark_filter_level = 0;
-// en haut de graphics.cpp
 extern unsigned short *drawBuffer;
-
 
 /* NGP specific: precalculated pattern structures (nibbles) */
 static const unsigned char mypatterns[256*4] =
@@ -690,6 +689,10 @@ void myGraphicsBlitLine(unsigned char render)
 
 BOOL graphics_init(void)
 {
+    if (!totalpalette) {
+        totalpalette = calloc(TOTALPALETTE_SIZE, sizeof(uint16_t));
+    }
+
 #ifdef __LIBRETRO__
     palette_init = palette_init16;
     palette_init(RMASK, GMASK, BMASK);

@@ -21,11 +21,25 @@
 
 /* lookup tables */
 
-static u8 SZXY[256];            /* zero and sign flags */
-static u8 SZXYP[256];           /* zero, sign and parity flags */
-static u8 SZXY_BIT[256];        /* zero, sign and parity/overflow (=zero) flags for BIT opcode */
-static u8 SZXYHV_inc[256];      /* zero, sign, half carry and overflow flags INC R8 */
-static u8 SZXYHV_dec[256];      /* zero, sign, half carry and overflow flags DEC R8 */
+static u8 *SZXY;            /* zero and sign flags */
+static u8 *SZXYP;           /* zero, sign and parity flags */
+static u8 *SZXY_BIT;        /* zero, sign and parity/overflow (=zero) flags for BIT opcode */
+static u8 *SZXYHV_inc;      /* zero, sign, half carry and overflow flags INC R8 */
+static u8 *SZXYHV_dec;      /* zero, sign, half carry and overflow flags DEC R8 */
+
+int Cz80_allocate_flag_tables(void)
+{
+    SZXY         = (uint8_t*)malloc(256);
+    SZXYP       = (uint8_t*)malloc(256);
+    SZXY_BIT    = (uint8_t*)malloc(256);
+    SZXYHV_inc  = (uint8_t*)malloc(256);
+    SZXYHV_dec  = (uint8_t*)malloc(256);
+
+    if (!SZXY || !SZXY_BIT || !SZXYP || !SZXYHV_inc || !SZXYHV_dec)
+        return 0;
+
+    return 1;
+}
 
 #define fast_memset memset
 

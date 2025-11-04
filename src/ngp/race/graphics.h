@@ -69,7 +69,7 @@ void myGraphicsBlitLine(unsigned char render);
  * adventure vision stuff
  */
 
-extern uint16_t totalpalette[16*16*16];
+extern uint16_t* totalpalette;
 extern uint16_t palettes[16*4+16*4+16*4];
 #define NGPC_TO_SDL16(col) totalpalette[col & 0x0FFF]
 
