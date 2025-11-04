@@ -17,12 +17,15 @@ static constexpr int kChannel    = 0;
 static void (*s_audio_cb)(void *buffer, int length) = nullptr;
 
 // Double buffer mono (Nofrendo to HP)
-static int16_t s_buf[2][kChunk];
+static int16_t* s_buf[2] = { nullptr, nullptr };
 static uint8_t s_flip = 0;
 
 extern "C" {
 
 int osd_init_sound() {
+  s_buf[0] = (int16_t*) heap_caps_calloc(kChunk, sizeof(int16_t), MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+  s_buf[1] = (int16_t*) heap_caps_calloc(kChunk, sizeof(int16_t), MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+
   auto cfg = M5Cardputer.Speaker.config();
   cfg.sample_rate    = kSampleRate;
   cfg.stereo         = false;   // mono

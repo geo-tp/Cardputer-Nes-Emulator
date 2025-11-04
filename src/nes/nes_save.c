@@ -8,10 +8,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#ifndef PATH_MAX
-#define PATH_MAX 261
-#endif
-
 extern void nofrendo_log_printf(const char *fmt, ...);
 extern char *osd_newextension(char *string, char *ext);
 
