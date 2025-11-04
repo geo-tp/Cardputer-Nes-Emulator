@@ -17,10 +17,10 @@ static constexpr int kChunk      = (kSampleRate + kFps/2) / kFps; // 368 smp/fra
 static constexpr int kChannel    = 0;
 
 // -------- Buffers --------
-static int16_t  s_buf[2][kChunk]; // double buffer mono
-static uint8_t  s_flip = 0;
-static uint16_t s_psg[kChunk];
-static uint16_t s_dac[kChunk];
+static int16_t*  s_buf[2]   = {nullptr, nullptr}; // double buffer mono
+static uint16_t* s_psg      = nullptr;
+static uint16_t* s_dac      = nullptr;
+static uint8_t   s_flip     = 0;
 
 // -------- Helpers --------
 static inline int16_t clamp16(int32_t v) {
@@ -49,6 +49,24 @@ static inline void queue_block(const int16_t* pcm /*kChunk*/) {
   );
 }
 
+static bool ngc_sound_alloc_buffers() {
+  const size_t bytes_i16 = (size_t)kChunk * sizeof(int16_t);
+  const size_t bytes_u16 = (size_t)kChunk * sizeof(uint16_t);
+
+  if (!s_buf[0]) s_buf[0] = (int16_t*) heap_caps_malloc(bytes_i16, MALLOC_CAP_INTERNAL | MALLOC_CAP_DMA | MALLOC_CAP_8BIT);
+  if (!s_buf[1]) s_buf[1] = (int16_t*) heap_caps_malloc(bytes_i16, MALLOC_CAP_INTERNAL | MALLOC_CAP_DMA | MALLOC_CAP_8BIT);
+  if (!s_psg)    s_psg    = (uint16_t*)heap_caps_malloc(bytes_u16, MALLOC_CAP_INTERNAL | MALLOC_CAP_DMA | MALLOC_CAP_8BIT);
+  if (!s_dac)    s_dac    = (uint16_t*)heap_caps_malloc(bytes_u16, MALLOC_CAP_INTERNAL | MALLOC_CAP_DMA | MALLOC_CAP_8BIT);
+
+  if (!s_buf[0] || !s_buf[1] || !s_psg || !s_dac) return false;
+
+  memset(s_buf[0], 0, bytes_i16);
+  memset(s_buf[1], 0, bytes_i16);
+  memset(s_psg,    0, bytes_u16);
+  memset(s_dac,    0, bytes_u16);
+  return true;
+}
+
 // -------- API --------
 extern "C" {
 
@@ -65,6 +83,10 @@ void ngc_sound_init(void) {
     cfg.task_pinned_core  = 1;
     M5Cardputer.Speaker.config(cfg);
     M5Cardputer.Speaker.begin();
+  }
+
+  if (!ngc_sound_alloc_buffers()) {
+    printf("[AUDIO] buffer alloc failed (kChunk=%d)\n", kChunk);
   }
 
   M5Cardputer.Speaker.setVolume(80);

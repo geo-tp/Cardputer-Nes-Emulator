@@ -6,23 +6,11 @@
 #include <atomic>
 
 // Framebuffer NGPC 160x152
-static uint16_t* s_fb = nullptr;
-unsigned short *drawBuffer = s_fb; 
 int ngpZoomPercent = 100;
 bool ngpFullscreen =  true;
 volatile unsigned g_frame_ready = 0;
 volatile unsigned g_frame_counter = 0;
 bool s_lastScreenMode = ngpFullscreen;
-
-// Line buffers
-static uint16_t s_linebuf_panel[240];    // largeur cardputer
-
-// LUTs fullscreen
-static uint16_t s_lut_x_full[240];
-static uint16_t s_lut_y_full[135];
-
-// LUTs 4:3
-static uint16_t s_lut_x_4x3[180];
 
 // LUT state
 static bool s_lut_ready = false;
@@ -30,20 +18,41 @@ static bool s_lut_ready = false;
 // Entrelacement odd/even
 static bool s_interlace_parity = false;
 
+static uint16_t* s_linebuf_panel = nullptr;
+static uint16_t* s_lut_x_full    = nullptr;
+static uint16_t* s_lut_y_full    = nullptr;
+static uint16_t* s_lut_x_4x3     = nullptr;
+static uint16_t* s_fb            = nullptr;
+unsigned short *drawBuffer = s_fb; 
+
 extern "C" void ngc_display_init(void)
 {
   const size_t fbBytes = (size_t)NGPC_W * (size_t)NGPC_H * sizeof(uint16_t);
+
+  // --- Framebuffer ---
   if (!s_fb) {
     s_fb = (uint16_t*)heap_caps_malloc(fbBytes, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
-    if (!s_fb) s_fb = (uint16_t*)malloc(fbBytes);  // fallback
+    if (!s_fb) s_fb = (uint16_t*)malloc(fbBytes);
+    if (s_fb) memset(s_fb, 0, fbBytes);
+    drawBuffer = s_fb;
   }
 
-  if (s_fb) {
-    memset(s_fb, 0, fbBytes);
-    drawBuffer = s_fb;
-  } else {
-    drawBuffer = nullptr;
-  }
+  // --- Buffers dynamiques ---
+  if (!s_linebuf_panel)
+    s_linebuf_panel = (uint16_t*)heap_caps_malloc(240 * sizeof(uint16_t),
+                                                  MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+
+  if (!s_lut_x_full)
+    s_lut_x_full = (uint16_t*)heap_caps_malloc(240 * sizeof(uint16_t),
+                                               MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+
+  if (!s_lut_y_full)
+    s_lut_y_full = (uint16_t*)heap_caps_malloc(135 * sizeof(uint16_t),
+                                               MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+
+  if (!s_lut_x_4x3)
+    s_lut_x_4x3 = (uint16_t*)heap_caps_malloc(180 * sizeof(uint16_t),
+                                              MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
 
   M5.Display.setSwapBytes(true);
   M5.Display.fillScreen(TFT_BLACK);
