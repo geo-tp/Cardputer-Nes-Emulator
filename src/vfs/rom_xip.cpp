@@ -36,12 +36,12 @@ int xip_map_rom_partition(const char *part_name, size_t rom_size_effective)
     return 0;
 }
 
-const uint8_t* _get_rom_ptr(void) { 
+const uint8_t* get_rom_ptr(void) { 
     return g_rom_ptr; 
 }
 
 
-size_t _get_rom_size(void) { 
+size_t get_rom_size(void) { 
     return g_rom_size; 
 }
 

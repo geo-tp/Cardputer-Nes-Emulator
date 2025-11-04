@@ -5,8 +5,8 @@
 #include "esp_vfs.h"
 #include "vfs_xip.h"
 
-extern const uint8_t* _get_rom_ptr(void);
-extern size_t         _get_rom_size(void);
+extern const uint8_t* get_rom_ptr(void);
+extern size_t         get_rom_size(void);
 
 typedef struct {
     const uint8_t* base;
@@ -37,8 +37,8 @@ static int xip_open(void* ctx, const char * path, int flags, int mode)
     (void)ctx; (void)flags; (void)mode;
     if (!path_is_rom(path)) { errno = ENOENT; return -1; }
 
-    const uint8_t* p = _get_rom_ptr();
-    size_t sz = _get_rom_size();
+    const uint8_t* p = get_rom_ptr();
+    size_t sz = get_rom_size();
     if (!p || sz == 0) { errno = ENOENT; return -1; }
 
     for (int i=0;i<XIP_MAX_OPEN;i++){
@@ -107,8 +107,8 @@ static int xip_stat(void* ctx, const char *path, struct stat *st)
 {
     (void)ctx;
     if (!path_is_rom(path)) { errno = ENOENT; return -1; }
-    const uint8_t* p = _get_rom_ptr();
-    size_t sz = _get_rom_size();
+    const uint8_t* p = get_rom_ptr();
+    size_t sz = get_rom_size();
     if (!p || sz == 0) { errno = ENOENT; return -1; }
     memset(st, 0, sizeof(*st));
     st->st_mode = S_IFREG | 0444;
