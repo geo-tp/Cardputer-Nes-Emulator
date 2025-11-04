@@ -12,6 +12,7 @@
 #include "nes/run_nes.h"
 #include "sms/run_sms.h"
 #include "ngp/run_ngp.h"
+#include "genesis/run_genesis.h"
 #include "last_game.h"
 #define RETRO_COMPAT_IMPLEMENTATION
 #include "ngp/race/retro_compat.h"
@@ -95,9 +96,12 @@ void setup() {
   // Register the XIP VFS
   vfs_xip_register();
 
+  // Check the extension to choose the emulator
+  auto ext = getRomType(romPath);
+
   // Show keymapping
   display.topBar("- + SOUND [ ] BRIGHT", false, false);
-  display.showKeymapping();
+  display.showKeymapping(ext == ROM_TYPE_GENESIS); // three buttons for genesis
 
   // Wait for key press or show tips
   uint32_t lastUpdate = millis();
@@ -122,8 +126,7 @@ void setup() {
     delay(1);
   }
 
-  // Check the extension to choose the emulator
-  auto ext = getRomType(romPath);
+  printf("HEAP: %u bytes free\n", esp_get_free_heap_size());
 
   // Save last game to nvs
   if (ext != ROM_TYPE_UNKNOWN) {
@@ -144,12 +147,16 @@ void setup() {
   else if (ext == ROM_TYPE_GAMEGEAR || ext == ROM_TYPE_SMS) {
       // --- Master System / Game Gear ---
       bool isGG = (ext == ROM_TYPE_GAMEGEAR);
-      run_sms(_get_rom_ptr(), _get_rom_size(), isGG, romName.c_str());
+      run_sms(get_rom_ptr(), get_rom_size(), isGG, romName.c_str());
   }
   else if (ext == ROM_TYPE_NGP) {
       // --- Neo Geo Pocket ---
-      int machine = detectNeoGeoPocketFromRom(_get_rom_ptr(), _get_rom_size(), romPath);
-      run_ngp(_get_rom_ptr(), _get_rom_size(), machine);
+      int machine = detectNeoGeoPocketFromRom(get_rom_ptr(), get_rom_size(), romPath);
+      run_ngp(get_rom_ptr(), get_rom_size(), machine);
+  }
+  else if (ext == ROM_TYPE_GENESIS) {
+      // --- Megadrive / Genesis ---
+      run_genesis(get_rom_ptr(), get_rom_size());
   }
   else {
       display.topBar("ERROR", false, false);
