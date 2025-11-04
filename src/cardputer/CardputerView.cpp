@@ -30,10 +30,10 @@ void CardputerView::initialize() {
     Display->setFont(&fonts::Font0);
 }
 
-void CardputerView::showKeymapping() {
+void CardputerView::showKeymapping(bool threeButtons) {
     clearMainView(5);
 
-    // Cadre 
+    // Cadre
     Display->fillRoundRect(10, 35, Display->width() - 20, 90, DEFAULT_ROUND_RECT, TFT_BLACK);
     Display->drawRoundRect(10, 35, Display->width() - 20, 90, DEFAULT_ROUND_RECT, PRIMARY_COLOR);
 
@@ -42,7 +42,7 @@ void CardputerView::showKeymapping() {
     Display->setTextColor(PRIMARY_COLOR);
     Display->drawCenterString("CONTROLS", Display->width() / 2, 45);
 
-    // Touches
+    // dessiner une touche
     auto keyBox = [&](int x, int y, int w, int h, const char* key) {
         Display->fillRoundRect(x, y, w, h, DEFAULT_ROUND_RECT, RECT_COLOR_DARK);
         Display->drawRoundRect(x, y, w, h, DEFAULT_ROUND_RECT, PRIMARY_COLOR);
@@ -52,7 +52,7 @@ void CardputerView::showKeymapping() {
         Display->drawCenterString(key, x + w/2, y + h/2 + textYOffset);
     };
 
-    // Croix 
+    // Croix
     const int keyW = 22, keyH = 18, gap = 2;
     const int padX = 26, padY = 56;
     keyBox(padX + keyW + gap,   padY,                 keyW, keyH, "E"); // Haut
@@ -60,13 +60,26 @@ void CardputerView::showKeymapping() {
     keyBox(padX + keyW + gap,   padY + (keyH+gap)*2,  keyW, keyH, "S"); // Bas
     keyBox(padX + (keyW+gap)*2, padY + keyH + gap,    keyW, keyH, "D"); // Droite
 
-    // A/B 
-    const int rightBlockW = keyW * 2 + gap;
-    int abX = Display->width() - 20 - rightBlockW - 10 - 5;
+    // Bloc boutons
     const int abY = 70;
     const int abGap = gap + 5;
-    keyBox(abX,               abY, keyW, keyH, "K");            // A
-    keyBox(abX + keyW + abGap,abY, keyW, keyH, "L");            // B
+
+    if (threeButtons) {
+        // J, K, L 
+        const int rightBlockW = keyW * 3 + abGap * 2;
+        int abX = Display->width() - 20 - rightBlockW - 5;
+
+        keyBox(abX,                        abY, keyW, keyH, "J"); // J
+        keyBox(abX + keyW + abGap,         abY, keyW, keyH, "K"); // A
+        keyBox(abX + (keyW + abGap) * 2,   abY, keyW, keyH, "L"); // B
+    } else {
+        // K, L (2 boutons)
+        const int rightBlockW = keyW * 2 + abGap;
+        int abX = Display->width() - 20 - rightBlockW - 10 - 5;
+
+        keyBox(abX,               abY, keyW, keyH, "K");            // A
+        keyBox(abX + keyW + abGap,abY, keyW, keyH, "L");            // B
+    }
 
     // START / SELECT
     const int centerX = Display->width() / 2;
@@ -100,7 +113,7 @@ void CardputerView::welcome() {
     Display->setTextSize(TEXT_MEDIUM);
     // Ligne consoles (multicolore)
     int y = boxY + 17;
-    int x = getCenterOffset("NES - SMS - GG - NGP");
+    int x = getCenterOffset("NES - SMS - MD - GG - NGP");
 
     Display->setCursor(x, y);
     Display->setTextColor(NES_COLOR);
@@ -111,6 +124,12 @@ void CardputerView::welcome() {
 
     Display->setTextColor(SMS_COLOR);
     Display->print("SMS");
+
+    Display->setTextColor(TEXT_COLOR);
+    Display->print(" - ");
+
+    Display->setTextColor(GENESIS_COLOR);
+    Display->print("MD");
 
     Display->setTextColor(TEXT_COLOR);
     Display->print(" - ");
@@ -341,6 +360,8 @@ void CardputerView::verticalSelectionSimple(
             Display->setTextColor(GAMEGEAR_COLOR);
         else if ((ext == "ngp" || ext == "ngc") && !isSelected)
             Display->setTextColor(NEOGEO_COLOR);
+        else if (ext == "md" && !isSelected)
+            Display->setTextColor(GENESIS_COLOR);
         else if (ext.empty()) {
             if ( !isSelected) {
                 Display->setTextColor(FOLDER_COLOR);
