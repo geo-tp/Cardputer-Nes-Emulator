@@ -276,7 +276,7 @@ extern "C" uint32_t controller_read_input()
 
 extern "C" void controller_init()
 {
-  Serial.printf("GPIO controller disabled in menuconfig; no input enabled.\n");
+  printf("GPIO controller disabled in menuconfig; no input enabled.\n");
 }
 
 extern "C" uint32_t controller_read_input()

@@ -39,8 +39,8 @@ typedef struct {
   /* FILL / EXRAM (nametable source=2/3) */
   uint8  fill_tile;        /* $5106 (0x000..0x3BF) */
   uint8  fill_attr;        /* $5107 (2 bits -> {00,55,AA,FF}) */
-  uint8  fill_table[0x400];
-  uint8  exram[0x400];     /* $5C00..$5FFF */
+  uint8  *fill_table;
+  uint8  *exram;           /* $5C00..$5FFF */
 
   /* split (kept; dynamic CHR swap by split not applied in this drop-in) */
   uint8  split;            /* $5200 bit7 */
@@ -103,12 +103,14 @@ static void cpu_map_8k(uint32 address, uint8 *src)
 /* Map WRAM 8K window (bit7 ignored; bank wraps over wram_size) */
 static void prg_map_wram8(uint32 address, uint8 bank7)
 {
-    if (!m5.wram) {
-        /* Fallback zeroed page if WRAM missing (shouldn't happen with our 64K alloc) */
-        static uint8 z[0x2000]; memset(z, 0, sizeof z); cpu_map_8k(address, z); return;
+    uint8 *base = m5.wram;
+    if (!base) { 
+      static uint8 zero = 0;
+      cpu_map_8k(address, &zero);
+      return;
     }
-    size_t off = ((size_t)(bank7 & 0x7F) << 13) % m5.wram_size; /* 8K * bank, wrap */
-    cpu_map_8k(address, m5.wram + off);
+    size_t off = ((size_t)(bank7 & 0x7F) << 13) % (m5.wram ? m5.wram_size : 0x2000);
+    cpu_map_8k(address, base + off);
 }
 
 /* puNES maps $6000 via prg[0] with write-protect; we map the data here */
@@ -529,12 +531,24 @@ static void map5_init(void)
   /* CHR init 1..11 (like puNES); chr[0] left at 0 */
   for (int i=1; i<=11; i++) m5.chr[i] = (uint16)i;
 
+  /* ALLOC SIMPLEMENT CES DEUX BUFFERS (1KB chacun) */
+  m5.fill_table = (uint8*)malloc(0x400);
+  m5.exram      = (uint8*)malloc(0x400);
+  if (!m5.fill_table || !m5.exram) {
+    free(m5.fill_table); m5.fill_table = NULL;
+    free(m5.exram);      m5.exram      = NULL;
+    nofrendo_log_printf("MMC5 init failed: out of memory (fill/exram)\n");
+    return;
+  }
+
+  /* init FILL/EXRAM  */
   m5.fill_attr = 0;
   memset(&m5.fill_table[0x000], 0x00, 0x3C0);
   memset(&m5.fill_table[0x3C0], 0x00, 0x40); /* filler_attrib[0] */
+  memset(m5.exram, 0x00, 0x400);
 
-  /* WRAM 64K superset (compatible with all known ExROM titles in puNES) */
-  m5.wram_size = 0x10000;
+  /* WRAM 8K */
+  m5.wram_size = 0x2000;
   m5.wram = (uint8*)NOFRENDO_MALLOC(m5.wram_size);
   if (m5.wram) memset(m5.wram, 0x00, m5.wram_size);
 

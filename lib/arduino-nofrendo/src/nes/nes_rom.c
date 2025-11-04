@@ -38,8 +38,8 @@
 #include "../log.h"
 #include "../osd.h"
 
-extern const uint8_t* _get_rom_ptr(void);
-extern size_t         _get_rom_size(void);
+extern const uint8_t* get_rom_ptr(void);
+extern size_t         get_rom_size(void);
 extern void osd_set_sram_ptr(uint8_t *ptr, size_t len);
 
 /* Max length for displayed filename */
@@ -167,8 +167,8 @@ static int rom_loadrom(FILE *fp, rominfo_t *rominfo)
 
     /* --- HACK XIP: if the ROM is mapped in flash, don't allocate anything, just point to it --- */
     {
-        const uint8_t *xip = _get_rom_ptr();
-        size_t xsz = _get_rom_size();
+        const uint8_t *xip = get_rom_ptr();
+        size_t xsz = get_rom_size();
         if (xip && xsz >= 16) {
             /* We assume the iNES header has already been read and that fp is positioned at the start of PRG */
             long prg_off = ftell(fp);                  /* offset start PRG in the file */

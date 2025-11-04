@@ -33,7 +33,7 @@
 #define VROM_SIZE 0x2000
 
 /* 6502 code for the intro */
-static uint8 intro_code[301] =
+static const uint8 intro_code[301] =
     {
         0x78,
         0xD8,
@@ -339,12 +339,12 @@ static uint8 intro_code[301] =
 };
 
 /* interrupt vectors (FFFAh - FFFFh) */
-static uint8 intro_vec[6] =
+static const uint8 intro_vec[6] =
     {
         0x27, 0x81, 0x00, 0x80, 0x27, 0x81};
 
 /* graphics */
-static uint8 intro_vrom[4096] =
+static const uint8 intro_vrom[4096] =
     {
         0x00,
         0x00,
