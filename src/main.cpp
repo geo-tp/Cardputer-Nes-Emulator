@@ -76,9 +76,9 @@ void setup() {
     while (1) {
       display.topBar("ERROR", false, false);
       display.subMessage("SD to Flash failed", 1500);
-      display.subMessage("Launcher max rom 1MB", 1500);
-      display.subMessage("Flash this firmware", 1500);
-      display.subMessage("to unlock full 4MB", 1500);
+      display.subMessage("Launcher max rom 1MB", 2000);
+      display.subMessage("Flash this firmware", 2000);
+      display.subMessage("to unlock full 4MB", 12000);
     }
   }
 
