@@ -32,6 +32,9 @@ static inline std::string getLastGameFromNvs(
 
     std::string path = lastGame.c_str();
 
+    display.topBar("Getting last game", false, false);
+    display.subMessage("Loading...", 0);
+
     // Verify if the file still exists
     if (!sdService.isFile(path)) {
         return "";
