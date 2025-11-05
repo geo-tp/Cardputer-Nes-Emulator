@@ -96,10 +96,12 @@ IRAM_ATTR static void run_one_frame() {
   // VDP and CPU setup for the frame
   gwenesis_vdp_render_config();
   int cpu_deadline = 0;
+  screen_width = REG12_MODE_H40 ? 320 : 256;
+  screen_height = REG1_PAL ? 240 : 224;
   const unsigned h = screen_height ? screen_height : 224u;
   const int lines_per_frame = (h >= 240u) ? 313 : 262;
   int hint_counter = gwenesis_vdp_regs[10];
-  int scan_line = 0;
+  scan_line = 0;
   const uint8_t field_ofs = g_field_ofs; // render 1/2 lines each frame
 
   // Notify start of frame to display task
@@ -113,7 +115,7 @@ IRAM_ATTR static void run_one_frame() {
     cpu_deadline += VDP_CYCLES_PER_LINE;
 
     // Run M68K CPU
-    m68k_run((int)cpu_deadline);
+    m68k_run(cpu_deadline);
     
     // Run Z80 and update YM2612 clock for sound
     #ifndef GENESIS_NO_SOUND

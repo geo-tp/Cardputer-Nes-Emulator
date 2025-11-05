@@ -1076,6 +1076,8 @@ blit_4to5_line(uint16_t *in, uint16_t *out) {
 __attribute__((optimize("unroll-loops")))
 void IRAM_ATTR gwenesis_vdp_render_line(int line)
 {
+  mode_h40 = REG12_MODE_H40;
+  
   // Interlace not supported
   if (BITS(gwenesis_vdp_regs[12], 1, 2) != 0) return;
 
@@ -1099,7 +1101,7 @@ void IRAM_ATTR gwenesis_vdp_render_line(int line)
 
   const int w = screen_width;
 
-    /* Mode Highlight/shadow is enabled */
+  /* Normal Mode */
   if (!MODE_SHI) {
     for (int x = 0; x < w; ++x) {
       const uint8_t idx = pb[x] & 0x3F;              // index palette 0..63
@@ -1108,7 +1110,8 @@ void IRAM_ATTR gwenesis_vdp_render_line(int line)
     GWENESIS_PUSH_SCANLINE(line, line565, w);
     return;
   }
-
+  
+  /* Mode Highlight/shadow is enabled */
   for (int x = 0; x < w; ++x) {
     const uint8_t plane   = pb[x];          // fond (A/B)
     const uint8_t sprite  = ps[x];          // sprite + attrs (ou 0)
