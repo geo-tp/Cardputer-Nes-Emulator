@@ -95,7 +95,7 @@ void CardputerView::welcome() {
     Display->drawRoundRect(10, 13, 217, 30, 5, PRIMARY_COLOR);
 
     // Title
-    std::string title = "Game Station 0.4";
+    std::string title = "Game Station 0.5";
     Display->setTextColor(TEXT_COLOR);
     Display->setTextSize(TEXT_BIG);
     Display->setCursor(getCenterOffset(title), 28);
@@ -111,7 +111,7 @@ void CardputerView::welcome() {
     Display->drawRoundRect(boxX, boxY, boxW, boxH, DEFAULT_ROUND_RECT, PRIMARY_COLOR);
 
     Display->setTextSize(TEXT_MEDIUM);
-    // Ligne consoles (multicolore)
+    // Ligne consoles
     int y = boxY + 17;
     int x = getCenterOffset("NES - SMS - MD - GG - NGP");
 
@@ -348,27 +348,15 @@ void CardputerView::verticalSelectionSimple(
         size_t dotPos = name.find_last_of('.');
         if (dotPos != std::string::npos) {
             ext = name.substr(dotPos + 1);
-            for (auto& c : ext)
-                c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
         }
 
-        if (ext == "nes" && !isSelected)
-            Display->setTextColor(NES_COLOR);
-        else if (ext == "sms" && !isSelected)
-            Display->setTextColor(SMS_COLOR);
-        else if (ext == "gg" && !isSelected)
-            Display->setTextColor(GAMEGEAR_COLOR);
-        else if ((ext == "ngp" || ext == "ngc") && !isSelected)
-            Display->setTextColor(NEOGEO_COLOR);
-        else if (ext == "md" && !isSelected)
-            Display->setTextColor(GENESIS_COLOR);
-        else if (ext.empty()) {
-            if ( !isSelected) {
-                Display->setTextColor(FOLDER_COLOR);
-            }
-            name = "/"  + name;
-        } else
-            Display->setTextColor(TEXT_COLOR);
+        auto color = isSelected ? TEXT_COLOR : colorForExt(ext);
+
+        if (ext.empty()) {
+            name = "/" + name;
+            color = isSelected ? TEXT_COLOR : FOLDER_COLOR;
+        } 
+        Display->setTextColor(color);
 
         Display->printf(truncateString(name, 20).c_str());
     }
@@ -919,3 +907,146 @@ void CardputerView::adjustTextSizeToFit(const std::string& text, uint16_t maxWid
         Display->setTextSize(textSize);
     }
 }
+
+uint16_t CardputerView::colorForExt(const std::string& extRaw) const {
+    std::string ext = extRaw;
+    for (auto& c : ext) c = (char)std::tolower((unsigned char)c);
+    if (!ext.empty() && ext[0] != '.') ext = "." + ext;
+
+    if (ext == ".nes") return NES_COLOR;
+    if (ext == ".sms") return SMS_COLOR;
+    if (ext == ".gg")  return GAMEGEAR_COLOR;
+    if (ext == ".ngp" || ext == ".ngc") return NEOGEO_COLOR;
+    if (ext == ".md") return GENESIS_COLOR;
+
+    return TEXT_COLOR;
+}
+
+void CardputerView::showValidExt(const std::vector<std::string>& exts,
+                                 const char* title) {
+    clearMainView(5);
+
+    // Cadre 
+    const int boxX = 10, boxY = 35;
+    const int boxW = Display->width() - 20;
+    const int boxH = 90;
+
+    Display->fillRoundRect(boxX, boxY, boxW, boxH, DEFAULT_ROUND_RECT, RECT_COLOR_DARK);
+    Display->drawRoundRect(boxX, boxY, boxW, boxH, DEFAULT_ROUND_RECT, PRIMARY_COLOR);
+
+    // Titre
+    Display->setTextSize(TEXT_WIDE);
+    Display->setTextColor(PRIMARY_COLOR);
+    const std::string titleStr = (title && *title) ? title : "Supported files";
+    Display->drawCenterString(titleStr.c_str(), Display->width() / 2, boxY + 10);
+
+    // Badges
+    const int innerPad = 10;                 // padding interne gauche/droite
+    const int innerW   = boxW - innerPad*2;  // largeur utile pour le wrap
+    int cursorY = boxY + 30;
+
+    // Style des badges
+    const int badgeHPadding = 8;   // padding horizontal
+    const int badgeVPadding = 3;   // padding vertical
+    const int badgeRadius   = DEFAULT_ROUND_RECT;
+    const int rowGap        = 6;
+    const int colGap        = 6;
+
+    Display->setTextSize(TEXT_MEDIUM);
+    Display->setTextColor(TEXT_COLOR);
+
+    // Construire lignes
+    struct Badge { std::string raw; std::string txt; int w; int h; };
+    std::vector<std::vector<Badge>> rows;
+    std::vector<Badge> current;
+
+    int currentRowWidth = 0;
+    int currentRowHeight = 0;
+
+    for (const auto& raw : exts) {
+        // Texte
+        std::string txt = raw;
+        for (auto& c : txt) c = (char)std::toupper((unsigned char)c);
+
+        // Dimensions
+        int textW  = Display->textWidth(txt.c_str());
+        int textH  = Display->fontHeight();
+        int badgeW = textW + badgeHPadding * 2;
+        int badgeH = textH + badgeVPadding * 2;
+
+        // Largeur
+        int sep   = current.empty() ? 0 : colGap;
+        int nextW = currentRowWidth + sep + badgeW;
+
+        if (nextW > innerW && !current.empty()) {
+            rows.push_back(current);
+            current.clear();
+            currentRowWidth = 0;
+            currentRowHeight = 0;
+            sep = 0; // pas d'espace
+        }
+
+        current.push_back(Badge{raw, txt, badgeW, badgeH});
+        currentRowWidth  += sep + badgeW;
+        currentRowHeight = std::max(currentRowHeight, badgeH);
+    }
+    if (!current.empty()) rows.push_back(current);
+
+    // Rendu des lignes
+    for (const auto& row : rows) {
+        int rowWidth = 0;
+        for (size_t i = 0; i < row.size(); ++i) {
+            rowWidth += row[i].w;
+            if (i + 1 < row.size()) rowWidth += colGap;
+        }
+
+        int startX = boxX + (boxW - rowWidth) / 2;  // centrage
+        int x = startX;
+
+        // Hauteur 
+        int lineH = 0;
+        for (const auto& b : row) lineH = std::max(lineH, b.h);
+
+        // Stop si hors box
+        if (cursorY + lineH > boxY + boxH - 8) break;
+
+        // Dessin des badges
+        for (size_t i = 0; i < row.size(); ++i) {
+            const auto& b = row[i];
+
+            // Couleurs
+            uint16_t accent = colorForExt(b.raw);
+            uint16_t fill   = RECT_COLOR_DARK;
+            uint16_t stroke = (accent == TEXT_COLOR) ? PRIMARY_COLOR : accent;
+
+            // Badge
+            Display->fillRoundRect(x, cursorY, b.w, b.h, badgeRadius, fill);
+            Display->drawRoundRect(x, cursorY, b.w, b.h, badgeRadius, stroke);
+
+            // Texte
+            int textW = Display->textWidth(b.txt.c_str());
+            int textH = Display->fontHeight();
+            int textX = x + (b.w - textW) / 2;
+            int textY = cursorY + (b.h - textH) / 2 + textH - 4;
+            Display->setTextColor(TEXT_COLOR);
+            Display->setCursor(textX, textY);
+            Display->printf("%s", b.txt.c_str());
+
+            x += b.w;
+            if (i + 1 < row.size()) x += colGap;
+        }
+
+        cursorY += lineH + rowGap;
+    }
+
+    // Mention bas
+    Display->setTextSize(TEXT_SMALL);
+    Display->setTextColor(PRIMARY_COLOR);
+    std::string hint = "Press any key to continue";
+    Display->drawCenterString(hint.c_str(), Display->width() / 2, boxY + boxH - 14);
+
+    // Reset style
+    Display->setTextSize(TEXT_MEDIUM);
+    Display->setTextColor(TEXT_COLOR);
+}
+
