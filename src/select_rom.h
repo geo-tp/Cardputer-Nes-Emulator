@@ -79,12 +79,14 @@ RomType getRomType(const std::string& path) {
 
 static inline std::string getRomPath(SdService& sdService, CardputerView& display, CardputerInput& input, const std::string& initialFolder = "/", bool skipWelcome = false) {
     VerticalSelector verticalSelector(display, input);
+    std::vector<std::string> supportedExts = {".nes", ".sms", ".md", ".gg", ".ngp", ".ngc"};
 
     display.initialize();
     display.topBar("LOAD ROM CARTRIDGE", false, false);
 
     if (!skipWelcome) {
-        display.subMessage(".nes .gg .sms .ngc .ngp", 2000);
+        display.showValidExt(supportedExts, "Supported files");
+        input.waitPress();
     } else {
         display.subMessage("Loading...", 0);
     }
@@ -132,14 +134,22 @@ static inline std::string getRomPath(SdService& sdService, CardputerView& displa
 
         // Retour
         if (selectedIndex >= elementNames.size()) {
-            currentPath = sdService.getParentDirectory(currentPath);
-            if (currentPath.empty()) currentPath = "/";
+            if (currentPath == "/") {
+                display.topBar("LOAD ROM CARTRIDGE", false, false);
+                display.showValidExt(supportedExts, "Supported files");
+                input.waitPress();
+            } else {
+                currentPath = sdService.getParentDirectory(currentPath);
+            }
             continue;
         }
 
         // Construct next path
         std::string nextPath = currentPath;
-        if (!nextPath.empty() && nextPath.back() != '/') nextPath += "/";
+        if (!nextPath.empty() && nextPath.back() != '/') {
+            nextPath += "/";
+        } 
+            
         nextPath += elementNames[selectedIndex];
 
         // folder
@@ -149,8 +159,9 @@ static inline std::string getRomPath(SdService& sdService, CardputerView& displa
         // file
         } else {
             if (!hasRomExt(nextPath)) {
-                display.topBar("Supported files", false, false);
-                display.subMessage(".sms .gg .nes .ngc .ngp", 2000);
+                display.topBar("FILE NOT SUPPORTED", false, false);
+                display.showValidExt(supportedExts, "Supported files");
+                input.waitPress();
                 continue; // non rom file
             }
             return "/sd" + nextPath; // file selected
