@@ -126,8 +126,6 @@ void setup() {
     delay(1);
   }
 
-  printf("HEAP: %u bytes free\n", esp_get_free_heap_size());
-
   // Save last game to nvs
   if (ext != ROM_TYPE_UNKNOWN) {
       saveLastGameToNvs(romPath);
