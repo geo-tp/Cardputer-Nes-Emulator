@@ -122,8 +122,9 @@ IRAM_ATTR static void run_one_frame() {
       if (genesis_audio_volume > 0) {
         if (!skipZ80) {
           z80_run(cpu_deadline);
+          gwenesis_SN76489_run(cpu_deadline);
+          genesis_sound_ym_set_target_clock(cpu_deadline);
         }
-        genesis_sound_ym_set_target_clock(cpu_deadline);
       }
     #endif
     
@@ -178,31 +179,30 @@ IRAM_ATTR static void run_one_frame() {
   // Run SN76489 and push sound samples for this frame
   #ifndef GENESIS_NO_SOUND
     if (genesis_audio_volume > 0) {
-      if (!skipZ80) {
-        gwenesis_SN76489_run(cpu_deadline);
-      }
+      gwenesis_SN76489_run(cpu_deadline);
       genesis_sound_submit_frame();
+      genesis_sound_ym_set_target_clock(cpu_deadline);
     }
   #endif
   
-  // FPS logging every 2 seconds
-  frame_count++;
-  uint64_t now = millis();
-  if (now - last_fps_log_time >= 2000) {
-    float fps = (frame_count * 1000.0f) / (now - last_fps_log_time);
-    printf("[FPS] ~%.1f fps\n", fps);
-    last_fps_log_time = now;
-    frame_count = 0;
-    // Log FPS + heap RAM 
-    printf("[FPS] ~%.1f fps | heap: %u\n", fps, heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
-  }
-
-   // Frame time budget check for the next frame
-  const uint32_t kFrameBudgetUs = 1000000u / (g_target_fps - 2); // 58FPS target
+  //  Frame time budget check for the next frame
+  const uint32_t kFrameBudgetUs = 1000000u / (g_target_fps - 8); // 52FPS target
   const uint32_t elapsedUs = (uint32_t)(micros() - t_start);
   if (elapsedUs > kFrameBudgetUs) {
     s_skipZ80Next = true;  // we are late, skip Z80 next frame
   }
+
+  // FPS logging every 2 seconds
+  // frame_count++;
+  // uint64_t now = millis();
+  // if (now - last_fps_log_time >= 2000) {
+  //   float fps = (frame_count * 1000.0f) / (now - last_fps_log_time);
+  //   printf("[FPS] ~%.1f fps\n", fps);
+  //   last_fps_log_time = now;
+  //   frame_count = 0;
+  //   // Log FPS + heap RAM 
+  //   printf("[FPS] ~%.1f fps | heap: %u\n", fps, heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+  // }
 }
 
 /* Run genesis emulation with XIP mapped rom */
