@@ -68,8 +68,8 @@ extern "C" void ngc_scheduler_start(void)
 
   //   Handled in main loop now
   //   xTaskCreatePinnedToCore(taskInput, "ngp_input", 4096, nullptr, 5, &s_taskInput, NGC_INPUT_CORE);
-  xTaskCreatePinnedToCore(taskAudio, "ngp_audio", 4096, nullptr, 3, &s_taskAudio, NGC_AUDIO_CORE);
-  xTaskCreatePinnedToCore(taskVideo, "ngp_video", 4096, nullptr, 4, &s_taskVideo, NGC_VIDEO_CORE);
+  xTaskCreatePinnedToCore(taskAudio, "ngp_audio", 2048, nullptr, 6, &s_taskAudio, NGC_AUDIO_CORE);
+  xTaskCreatePinnedToCore(taskVideo, "ngp_video", 2048, nullptr, 6, &s_taskVideo, NGC_VIDEO_CORE);
 }
 
 extern "C" void ngc_scheduler_stop(void)
