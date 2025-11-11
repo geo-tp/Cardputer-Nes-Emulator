@@ -289,8 +289,8 @@ typedef struct {
 } MYSPRITELINE;
 
 static MYSPRITELINE mySprPri40, mySprPri80, mySprPriC0;
-static MYSPRITE mySprites[64];
-static unsigned short myPalettes[192];
+static MYSPRITE *mySprites;
+static unsigned short *myPalettes = NULL;
 
 void sortSprites(unsigned int bw)
 {
@@ -691,6 +691,14 @@ BOOL graphics_init(void)
 {
     if (!totalpalette) {
         totalpalette = calloc(TOTALPALETTE_SIZE, sizeof(uint16_t));
+    }
+
+    if (!myPalettes) {
+        myPalettes = calloc(192, sizeof(uint16_t));
+    }
+
+    if (!mySprites) {
+        mySprites = calloc(64, sizeof(MYSPRITE));
     }
 
 #ifdef __LIBRETRO__

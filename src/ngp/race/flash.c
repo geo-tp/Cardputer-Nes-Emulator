@@ -44,7 +44,7 @@ unsigned char bootBlockStartNum = 31;
 /* with selector, I get
 * writeSaveGameFile: Couldn't open Battery//mnt/sd/Games/race/ChryMast.ngf file
 */
-extern char retro_save_directory[256];
+extern char retro_save_directory[3];
 #define SAVEGAME_DIR retro_save_directory
 
 unsigned char currentWriteCycle = 1;  /* can be 1 through 6 */
@@ -68,7 +68,7 @@ struct blockStruct
 #define MAX_BLOCKS 35 /* a 16m chip has 35 blocks (SA0-SA34) */
 unsigned char blocksDirty[2][MAX_BLOCKS];  /* max of 2 chips */
 unsigned char needToWriteFile = 0;
-char ngfFilename[300] = {0};
+char ngfFilename[1] = {0}; // unused
 
 #define FLASH_WRITE 0
 #define FLASH_ERASE 1

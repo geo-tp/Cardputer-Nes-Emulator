@@ -16,7 +16,7 @@
 typedef struct {
   int  machine;  // NGP ou NGPC
   int  romSize;
-  char RomFileName[256];
+  char RomFileName[1]; // unused
 } EMUINFO;
 
 // --- BOOL ---
@@ -47,7 +47,7 @@ extern EMUINFO m_emuInfo;
 struct ngp_screen;
 extern struct ngp_screen *screen;
 
-extern char retro_save_directory[256];
+extern char retro_save_directory[3]; // unused
 extern int tipo_consola;
 
 // --------- dbg_print stub ----------

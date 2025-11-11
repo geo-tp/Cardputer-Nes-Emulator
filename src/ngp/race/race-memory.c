@@ -373,7 +373,6 @@ static unsigned char loadBIOS(void)
 
 static void* alloc_aligned(size_t sz) {
 #if defined(ESP_PLATFORM)
-  // DRAM interne 8-bit pour accès CPU rapide ; pas besoin de DMA ici
   void* p = heap_caps_malloc(sz, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
   if (!p) p = heap_caps_malloc(sz, MALLOC_CAP_8BIT);
   if (!p) p = malloc(sz);
@@ -407,7 +406,6 @@ bool ngp_mem_alloc_init(size_t mainram_sz, size_t cpurom_sz)
     memset(s_cpuram_256, 0, 256);
   }
 
-  // Par défaut, cpuram pointe sur mainram (comme avant)
   if (!cpuram) cpuram = mainram;
 
   return true;
@@ -418,7 +416,7 @@ void ngp_mem_free(void)
   if (mainram) { free(mainram); mainram = NULL; g_mainram_size = 0; }
   if (cpurom)  { free(cpurom);  cpurom  = NULL; g_cpurom_size  = 0; }
   if (s_cpuram_256) { free(s_cpuram_256); s_cpuram_256 = NULL; }
-  // mainrom est un pointeur vers la ROM fournie par l’utilisateur -> ne pas free
+  // mainrom est un pointeur vers la ROM fournie
   cpuram = NULL;
 }
 
