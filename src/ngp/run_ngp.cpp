@@ -11,10 +11,11 @@
 #include "ngc_input.h"
 #include "ngc_display.h"
 #include "ngc_scheduler.h"
+// #include "ngc_bios.h"
 
 #define NGP_LANG_EN 1
 #define NGP_LANG    NGP_LANG_EN  // 0 = JP, 1 = EN
-char retro_save_directory[2048] = "/sd/ngp_saves";
+char retro_save_directory[3] = "/";
 int tipo_consola = 0;
 
 extern "C" {
@@ -61,6 +62,7 @@ void ngpSoundOff(void);
 void ngpSoundExecute(void) __attribute__((weak));
 void ngpSoundExecute(void) {}
 void audio_dac_init(void);
+int Cz80_allocate_flag_tables(void);
 
 }
 
@@ -132,6 +134,7 @@ void run_ngp(const uint8_t* rom_base, size_t rom_size, int machine)
   tipo_consola      = 0;      // 0 = NGPC, 1 = NGP (mono)
 
   // Core init
+  Cz80_allocate_flag_tables();
   ngp_mem_init();
 
   // Map VRAM/regs
@@ -173,14 +176,6 @@ void run_ngp(const uint8_t* rom_base, size_t rom_size, int machine)
   finscan = 198;
   if (mainrom[0x000020] == 0x65 || mainrom[0x000020] == 0x93) finscan = 199;
 
-  // Kludges ROM
-  switch (tlcsMemReadW(0x00200020)) {
-    case 0x0059:   // Sonic
-    case 0x0061:   // Metal Slug 2nd
-        tlcsMemWriteB(0x0020001F, 0xFF);
-      break;
-  }
-
   audio_dac_init();
   ngc_sound_init();
   ngc_sound_frame();
@@ -204,6 +199,15 @@ void run_ngp(const uint8_t* rom_base, size_t rom_size, int machine)
   unsigned long frames = 0;
   const uint32_t TARGET_US = 16667; // 60 Hz
   const uint32_t CPU_CLOCK_HZ = 6000000; // 6 MHz
+  
+  // Kludges ROM
+  switch (tlcsMemReadW(0x00200020)) {
+    case 0x0059:   // Sonic
+    case 0x0061:   // Metal Slug 2nd
+        tlcsMemWriteB(0x0020001F, 0xFF);
+        // ngc_patch_snk_logo();
+      break;
+  }
 
   while (m_bIsActive)
   {
@@ -229,8 +233,13 @@ void run_ngp(const uint8_t* rom_base, size_t rom_size, int machine)
       frames++;
       if (millis() - status_last >= 2000)
       {
-          printf("[NGPC_RUN] %lu frames / 2s (~%lu FPS)\n",
-                  frames, frames / 2);
+          size_t heap_free = heap_caps_get_free_size(MALLOC_CAP_DEFAULT);
+
+          printf("[NGPC_RUN] %lu frames / 2s (~%lu FPS) | HEAP: %u bytes (%.1f KB)\n",
+                frames,
+                frames / 2,
+                (unsigned int)heap_free,
+                heap_free / 1024.0f);
 
           frames = 0;
           status_last = millis();
