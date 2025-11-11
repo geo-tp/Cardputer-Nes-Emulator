@@ -96,13 +96,10 @@ IRAM_ATTR static void run_one_frame() {
   // VDP and CPU setup for the frame
   gwenesis_vdp_render_config();
   int cpu_deadline = 0;
-  screen_width = REG12_MODE_H40 ? 320 : 256;
-  screen_height = REG1_PAL ? 240 : 224;
   const unsigned h = screen_height ? screen_height : 224u;
   const int lines_per_frame = (h >= 240u) ? 313 : 262;
   int hint_counter = gwenesis_vdp_regs[10];
   scan_line = 0;
-  const uint8_t field_ofs = g_field_ofs; // render 1/2 lines each frame
 
   // Notify start of frame to display task
   if (g_scanQ) {
@@ -129,7 +126,7 @@ IRAM_ATTR static void run_one_frame() {
     #endif
     
     // VDP line rendering, if no frame skip and not the lines to skip
-    if (drawFrame && (unsigned)scan_line < h && ((scan_line & 1) == field_ofs)) {
+    if (drawFrame && (unsigned)scan_line < h && ((scan_line & 1) == g_field_ofs)) {
       gwenesis_vdp_render_line(scan_line);
     }
 
@@ -197,7 +194,6 @@ IRAM_ATTR static void run_one_frame() {
   // uint64_t now = millis();
   // if (now - last_fps_log_time >= 2000) {
   //   float fps = (frame_count * 1000.0f) / (now - last_fps_log_time);
-  //   printf("[FPS] ~%.1f fps\n", fps);
   //   last_fps_log_time = now;
   //   frame_count = 0;
   //   // Log FPS + heap RAM 
@@ -236,9 +232,10 @@ extern "C" void IRAM_ATTR run_genesis(const uint8_t* rom, size_t len) {
     genesis_sound_ym_init();
     genesis_sound_ym_start();
   #endif
-  
-  printf("[GWENESIS] Start\n");
 
+  screen_width = REG12_MODE_H40 ? 320 : 256;
+  screen_height = REG1_PAL ? 240 : 224;
+  
   // Main emulation loop with frame pacing
   uint64_t next_frame_us = esp_timer_get_time();
   for (;;) {

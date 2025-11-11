@@ -655,7 +655,8 @@ typedef struct
 } YM2612;
 
 /* emulated chip */
-static YM2612 ym2612;
+static YM2612 *g_ym2612 = NULL;
+#define ym2612 (*g_ym2612)  // garde la compat
 
 /* current chip state */
 static INT32  m2,c1,c2;   /* Phase Modulation input for operators 2,3,4 */
@@ -664,7 +665,7 @@ static INT32  out_fm[8];  /* outputs of working channels */
 static UINT32 bitmask;    /* working channels output bitmasking (DAC quantization) */
 
 /* mirror of all OPN registers */
-static uint8_t OPNREGS[512];
+static uint8_t *OPNREGS = NULL;
 
 INLINE void FM_KEYON(FM_CH *CH , int s )
 {
@@ -1947,16 +1948,30 @@ static void init_tables(void)
 
 /* initialize ym2612 emulator */
 void YM2612Init(void) {
-  #ifndef GENESIS_NO_SOUND
-  static unsigned init_table_done = 0;
-  ssg_mask_any = 0;
-  memset(&ym2612, 0, sizeof(YM2612));
-  if (init_table_done == 0) {
-    init_tables();
-    init_table_done = 1;
-  }
-  #endif
+#ifndef GENESIS_NO_SOUND
+    static unsigned init_table_done = 0;
+
+    if (OPNREGS == NULL) {
+        OPNREGS = (UINT8*)malloc(512 * sizeof(UINT8));
+        if (!OPNREGS) return;                // pas de son si OOM
+    }
+
+    if (!g_ym2612) {
+        g_ym2612 = (YM2612*)malloc(sizeof(YM2612));
+        if (!g_ym2612) return;                // pas de son si OOM
+    }
+    memset(g_ym2612, 0, sizeof(YM2612));      // reset état puce
+
+    // tes globals liés au core
+    ssg_mask_any = 0;
+
+    if (init_table_done == 0) {
+        init_tables();
+        init_table_done = 1;
+    }
+#endif
 }
+
 
 /* reset OPN registers */
 void YM2612ResetChip(void)
@@ -2154,7 +2169,7 @@ void YM2612Write(unsigned int a, unsigned int v,  int target)
 
   //Sync
   if (GWENESIS_AUDIO_ACCURATE == 1)
-    ym2612_run(target); 
+    // ym2612_run(target); 
 
   v &= 0xff;  /* adjust to 8 bit bus */
 
@@ -2204,7 +2219,8 @@ unsigned int YM2612Read(int target)
 {
   // //Sync
   if (GWENESIS_AUDIO_ACCURATE == 1)
-    ym2612_run(target);
+    // ym2612_run(target);
+    
   ym_log(__FUNCTION__, "%02x",ym2612.OPN.ST.status & 0xff);
   return ym2612.OPN.ST.status & 0xff;
 }
@@ -2343,13 +2359,11 @@ void gwenesis_ym2612_tables_alloc(void) {
     if (!sin_tab) {
         sin_tab = (unsigned int*) calloc(SIN_LEN, sizeof(unsigned int));
     }
-#if GW_TARGET
     if (!lfo_pm_table) {
         lfo_pm_table = (UINT8*) calloc(128 * 8 * 16, sizeof(UINT8));
     }
-#else
-    if (!lfo_pm_table) {
-        lfo_pm_table = (INT32*) calloc(128 * 8 * 32, sizeof(INT32));
-    }
-#endif
+    
+    // if (!lfo_pm_table) {
+    //     lfo_pm_table = (INT32*) calloc(128 * 8 * 32, sizeof(INT32));
+    // }
 }
