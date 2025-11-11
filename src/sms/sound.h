@@ -7,6 +7,7 @@ extern "C" {
 }
 #endif
 
+void sms_allocate_sound_buffers(int bufsize);
 void sms_audio_init();
 void sms_audio_stop();
 void sms_audio_frame();

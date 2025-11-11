@@ -10,8 +10,8 @@ static volatile bool gRunAudio = true;
 static constexpr int kSampleRate = 22050;   // Hz
 static constexpr int kChannel    = 0;
 static constexpr int   kChunk      = 128; 
-
-static int16_t s_buf[2][1024];
+static constexpr int kBufSize = 888;
+static int16_t* s_buf[2] = {nullptr, nullptr};
 static uint8_t s_flip = 0;
 
 static inline int clamp16(int x){ return x < -32768 ? -32768 : (x > 32767 ? 32767 : x); }
@@ -29,6 +29,19 @@ void sms_audio_init(){
   cfg.task_pinned_core  = 1;
   M5Cardputer.Speaker.config(cfg);
 
+  if (!s_buf[0]) {
+    s_buf[0] = (int16_t*) heap_caps_malloc(
+        kBufSize * sizeof(int16_t),
+        MALLOC_CAP_INTERNAL | MALLOC_CAP_DMA | MALLOC_CAP_8BIT
+    );
+  }
+  if (!s_buf[1]) {
+    s_buf[1] = (int16_t*) heap_caps_malloc(
+        kBufSize * sizeof(int16_t),
+        MALLOC_CAP_INTERNAL | MALLOC_CAP_DMA | MALLOC_CAP_8BIT
+    );
+  }
+
   if (!M5Cardputer.Speaker.isRunning())
     M5Cardputer.Speaker.begin();
 
@@ -40,35 +53,30 @@ void sms_audio_stop(){
   M5Cardputer.Speaker.stop(kChannel);
 }
 
-IRAM_ATTR void sms_audio_frame(){
+void sms_audio_frame(){
   if (!snd.buffer[0] || !snd.buffer[1] || snd.bufsize <= 0) return;
 
-  int cap = (int)(sizeof(s_buf[0]) / sizeof(int16_t));
-  int n = std::min((int)snd.bufsize, cap);
+  int n = std::min((int)snd.bufsize, kBufSize);
+  n &= ~1;
 
   size_t st = M5Cardputer.Speaker.isPlaying(kChannel);
 
   if (st == 0) {
-    int16_t* out0 = s_buf[s_flip];
-    mix_lr_to(out0, snd.buffer[0], snd.buffer[1], n);
-    (void)M5Cardputer.Speaker.playRaw(out0, (size_t)n, (uint32_t)kSampleRate, false, 1, kChannel, false);
-
+    mix_lr_to(s_buf[s_flip], snd.buffer[0], snd.buffer[1], n);
+    M5Cardputer.Speaker.playRaw(s_buf[s_flip], (size_t)n, (uint32_t)kSampleRate, false, 1, kChannel, false);
     s_flip ^= 1;
-    int16_t* out1 = s_buf[s_flip];
-    mix_lr_to(out1, snd.buffer[0], snd.buffer[1], n);
-    (void)M5Cardputer.Speaker.playRaw(out1, (size_t)n, (uint32_t)kSampleRate, false, 1, kChannel, false);
 
+    mix_lr_to(s_buf[s_flip], snd.buffer[0], snd.buffer[1], n);
+    M5Cardputer.Speaker.playRaw(s_buf[s_flip], (size_t)n, (uint32_t)kSampleRate, false, 1, kChannel, false);
     s_flip ^= 1;
     return;
   }
 
   if (st == 1) {
-    int16_t* out = s_buf[s_flip];
-    mix_lr_to(out, snd.buffer[0], snd.buffer[1], n);
-    (void)M5Cardputer.Speaker.playRaw(out, (size_t)n, (uint32_t)kSampleRate, false, 1, kChannel, false);
+    mix_lr_to(s_buf[s_flip], snd.buffer[0], snd.buffer[1], n);
+    M5Cardputer.Speaker.playRaw(s_buf[s_flip], (size_t)n, (uint32_t)kSampleRate, false, 1, kChannel, false);
     s_flip ^= 1;
   }
-  // st == 2 => deux buffers déjà en file, on laisse tourner
 }
 
 static void audio_task(void*){
