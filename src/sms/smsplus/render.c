@@ -6,6 +6,7 @@ void (*render_bg)(int line);
 
 /* Pointer to output buffer */
 uint8 *linebuf;
+static uint8 *linebuf_ = NULL;
 
 //Each tile takes up 8*8=64 bytes. We have 512 tiles * 4 attribs, so 2K tiles max.
 #define CACHEDTILES 512
@@ -48,22 +49,25 @@ void render_reset(void);
 void render_init(void);
 
 static int render_alloc_buffers(void) {
-    if (cachePtr && cacheStore && cacheStoreUsed) return 1;
+    if (cachePtr && cacheStore && cacheStoreUsed && linebuf_) return 1;
 
     cachePtr       = (int16_t*) malloc(sizeof(int16_t) * MAX_TILE_KEYS);
     cacheStore     = (uint8_t*)  malloc((size_t)CACHEDTILES * TILE_BYTES);
     cacheStoreUsed = (uint8_t*)  malloc((size_t)CACHEDTILES);
+    linebuf_       = (uint8_t*)  malloc(256);
 
-    if (!cachePtr || !cacheStore || !cacheStoreUsed) {
+    if (!cachePtr || !cacheStore || !cacheStoreUsed || !linebuf_) {
         free(cachePtr);       cachePtr = NULL;
         free(cacheStore);     cacheStore = NULL;
         free(cacheStoreUsed); cacheStoreUsed = NULL;
+        free(linebuf_);       linebuf_ = NULL;
         return 0;
     }
 
     memset(cachePtr, 0xFF, sizeof(int16_t) * MAX_TILE_KEYS);
     memset(cacheStoreUsed, 0, (size_t)CACHEDTILES);
     memset(cacheStore, 0, (size_t)CACHEDTILES * TILE_BYTES);
+    memset(linebuf_, 0, 256);
 
     is_vram_dirty = 1;
 
@@ -288,7 +292,6 @@ void render_reset(void)
 
 /* Draw a line of the display */
 static void render_332(const uint8_t* buf, int line);
-static uint8_t linebuf_[256];
 
 void render_line(int line)
 {
