@@ -13,10 +13,7 @@ void run_nes(const char* xipPath)
   display.initialize();
 
   // Call the NES core
-  // Note: the core expects argv[0] to be the ROM path
-  static char romArg[256];
-  std::snprintf(romArg, sizeof(romArg), "%s", xipPath);
-  char* argv_[1] = { romArg };
-
+  // Note: the core expects argv to be the ROM path
+  char* argv_[1] = { const_cast<char*>(xipPath) };
   nofrendo_main(1, argv_);
 }
