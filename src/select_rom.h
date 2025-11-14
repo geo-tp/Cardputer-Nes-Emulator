@@ -19,7 +19,8 @@ enum RomType {
     ROM_TYPE_SMS,
     ROM_TYPE_GAMEGEAR,
     ROM_TYPE_NGP,
-    ROM_TYPE_GENESIS
+    ROM_TYPE_GENESIS,
+    ROM_TYPE_WS
 };
 
 // NGP types
@@ -37,7 +38,7 @@ static inline bool hasRomExt(const std::string& path) {
     for (auto &ch : ext)
         ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
 
-    return (ext == "nes" || ext == "gg" || ext == "sms" || ext == "ngc" || ext == "ngp" || ext == "md");
+    return (ext == "nes" || ext == "gg" || ext == "sms" || ext == "ngc" || ext == "ngp" || ext == "md" || ext == "ws" || ext == "wsc");
 }
 
 static inline int detectNeoGeoPocketFromRom(const uint8_t* rom, size_t size, const std::string& filepath)
@@ -50,6 +51,23 @@ static inline int detectNeoGeoPocketFromRom(const uint8_t* rom, size_t size, con
   }
   // fallback
   return NGPC;
+}
+
+static inline int detectWonderSwanFromRom(const std::string& filepath)
+{
+    // by extension
+    size_t dotPos = filepath.find_last_of('.');
+    if (dotPos == std::string::npos) return 0;
+
+    std::string ext = filepath.substr(dotPos + 1);
+
+    for (auto &ch : ext)
+        ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+
+    if (ext == "ws") return 0;   // WonderSwan
+    if (ext == "wsc") return 1;  // WonderSwan Color
+
+    return 0; // default
 }
 
 RomType getRomType(const std::string& path) {
@@ -73,13 +91,15 @@ RomType getRomType(const std::string& path) {
     if (ext == "ngc") return ROM_TYPE_NGP;
     if (ext == "ngp") return ROM_TYPE_NGP;
     if (ext == "md")  return ROM_TYPE_GENESIS;
+    if (ext == "ws" )  return ROM_TYPE_WS;
+    if (ext == "wsc")  return ROM_TYPE_WS;
 
     return ROM_TYPE_UNKNOWN;
 }
 
 static inline std::string getRomPath(SdService& sdService, CardputerView& display, CardputerInput& input, const std::string& initialFolder = "/", bool skipWelcome = false) {
     VerticalSelector verticalSelector(display, input);
-    std::vector<std::string> supportedExts = {".nes", ".sms", ".md", ".gg", ".ngp", ".ngc"};
+    std::vector<std::string> supportedExts = {".nes", ".sms", ".md", ".gg", ".ngp", ".ngc", ".ws" , ".wsc"};
 
     display.initialize();
     display.topBar("LOAD ROM CARTRIDGE", false, false);
