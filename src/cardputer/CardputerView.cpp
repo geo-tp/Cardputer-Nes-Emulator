@@ -113,7 +113,7 @@ void CardputerView::welcome() {
     Display->setTextSize(TEXT_MEDIUM);
     // Ligne consoles
     int y = boxY + 17;
-    int x = getCenterOffset("NES - SMS - MD - GG - NGP");
+    int x = getCenterOffset("NES - SMS - MD - GG - NGP - WS");
 
     Display->setCursor(x, y);
     Display->setTextColor(NES_COLOR);
@@ -142,6 +142,12 @@ void CardputerView::welcome() {
 
     Display->setTextColor(NEOGEO_COLOR);
     Display->print("NGC");
+
+    Display->setTextColor(TEXT_COLOR);
+    Display->print(" - ");
+
+    Display->setTextColor(WS_COLOR);
+    Display->print("WS");
 
     Display->setTextSize(TEXT_MEDIUM);
     Display->setTextColor(TEXT_COLOR);
@@ -918,6 +924,7 @@ uint16_t CardputerView::colorForExt(const std::string& extRaw) const {
     if (ext == ".gg")  return GAMEGEAR_COLOR;
     if (ext == ".ngp" || ext == ".ngc") return NEOGEO_COLOR;
     if (ext == ".md") return GENESIS_COLOR;
+    if (ext == ".ws" || ext == ".wsc") return WS_COLOR;
 
     return TEXT_COLOR;
 }

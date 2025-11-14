@@ -22,6 +22,7 @@
 #define NES_COLOR      0xFA47  // Rouge orange (≈ #FF4A3D)
 #define GAMEGEAR_COLOR 0xC29F  // Violet/magenta  (≈ #C050FF)
 #define NEOGEO_COLOR   0x05E8 // Vert (≈ #2a9333ff)
+#define WS_COLOR       0x07FF  // Cyan (≈ #00FFFF)
 #define FOLDER_COLOR   0xFEC0  // Jaune pâle (≈ #F6EB61)
 
 // TEXT SIZE
