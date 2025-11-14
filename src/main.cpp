@@ -12,6 +12,7 @@
 #include "nes/run_nes.h"
 #include "sms/run_sms.h"
 #include "ngp/run_ngp.h"
+#include "ws/run_ws.h"
 #include "genesis/run_genesis.h"
 #include "last_game.h"
 #define RETRO_COMPAT_IMPLEMENTATION
@@ -74,7 +75,7 @@ void setup() {
   size_t romSize = 0;
   if (!copyFileToPartition(romPath.c_str(), romPart, &romSize)) {
     while (1) {
-      display.topBar("ERROR", false, false);
+      display.topBar("ROM TOO HEAVY", false, false);
       display.subMessage("SD to Flash failed", 1500);
       display.subMessage("Launcher max rom 1MB", 2000);
       display.subMessage("Flash this firmware", 2000);
@@ -138,9 +139,8 @@ void setup() {
   // Run the emulator
   if (ext == ROM_TYPE_NES) {
       // --- NES ---
-      char romArg[256];
-      std::snprintf(romArg, sizeof(romArg), "/xip/%s", romName.c_str());
-      run_nes(romArg);
+      romName = "/xip/" + romName;
+      run_nes(romName.c_str());
   }
   else if (ext == ROM_TYPE_GAMEGEAR || ext == ROM_TYPE_SMS) {
       // --- Master System / Game Gear ---
@@ -155,6 +155,10 @@ void setup() {
   else if (ext == ROM_TYPE_GENESIS) {
       // --- Megadrive / Genesis ---
       run_genesis(get_rom_ptr(), get_rom_size());
+  }
+  else if (ext == ROM_TYPE_WS) {
+      // --- WonderSwan ---
+      run_ws(get_rom_ptr(), get_rom_size(), romName.c_str(), detectWonderSwanFromRom(romPath));
   }
   else {
       display.topBar("ERROR", false, false);
