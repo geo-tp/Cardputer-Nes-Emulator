@@ -5,22 +5,23 @@
 ![NGP emulator screen captures on the M5Stack Cardputer](ngp_emulator_s.jpg)
 ![Megadrive emulator screen captures on the M5Stack Cardputer](megadrive_emulator_s.jpg)
 
-Powered by [Nofrendo](https://github.com/moononournation/arduino-nofrendo), **Smsplus**, [Race](https://github.com/libretro/RACE) and [Gwenesis](https://github.com/bzhxx/gwenesis). 
+Powered by [Nofrendo](https://github.com/moononournation/arduino-nofrendo), **Smsplus**, [Race](https://github.com/libretro/RACE), [Gwenesis](https://github.com/bzhxx/gwenesis) and [Oswan](https://github.com/alekmaul/oswan). 
 
-**Running on the M5Stack Cardputer**, with sound, video, save, and gamepad controls.
+**Running on the M5Stack Cardputer**, with sound, video, game save, and controls.
 
-- **NES**
-- **Master System**
-- **Game Gear**
-- **Megadrive / Genesis**
-- **Neo Geo Pocket Color**
+ Console           | Sound | Video | Save | Speed | All Games  | Notes |
+|-------------------|--------|--------|---------------|-------------|-------------------|--------|
+| **NES**           | ✅ | ✅ | ✅ | ✅ | ✅ | Few mappers issues in some games |
+| **Master System** | ✅ | ✅ | ✅ | ✅ | ✅ | Fully compatible |
+| **Game Gear**     | ✅ | ✅ | ✅ | ✅ | ✅ | Fully compatible |
+| **Mega Drive**    | ✅ | ✅ | ⚠️ | ✅ | ✅ | Some slowdown and not accurate sound in heavy titles |
+| **Neo Geo Pocket**| ✅ | ✅ | ⚠️ | ✅ | ✅| Some slowdown in heavy titles |
+| **WonderSwan**    | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | No support for SRAM >32KB, not full speed (75FPS) in most games  |
 
-It runs **`.nes` `.sms` `.gg`  `.md` `.ngc` ROM files directly from the SD**, simply browse and select the game you want to play.
-**Make sure your ROMs are uncompressed** (.nes .gg .sms .ngc .md only — not .zip, .7z, or .rar).
 
-**All games are supported**. 
+It runs **`.nes` `.sms` `.gg`  `.md` `.ngc` `.ngp` `.ws` `.wsc` ROM files directly from the SD**.
 
-Save files are stored on the SD card in the `nes_saves` or `sms_saves` (GG/SMS) folders.
+> **Make sure your ROMs are uncompressed** (.nes .gg .sms .ngc .ngp .md .ws .wsc only — not .zip, .7z, or .rar).
 
 ## Controls
 
@@ -49,7 +50,7 @@ The built-in **Cardputer keyboard** is used for all controls:
 
 The Zoom Mode allows you to **dynamically adjust the display scale of games** on the Cardputer’s screen.
 
-By pressing `\` (above the `OK` key), you can toggle between **multiple zoom levels (100 to 150%),  fullscreen or 4/3**. This flexibility ensures that each game looks its best on the Cardputer’s compact display.
+By pressing `\` (above the `OK` key), you can toggle between **multiple zoom levels (100 to 150%), fullscreen or 4/3**. This flexibility ensures that each game looks its best on the Cardputer’s compact display.
 
 You can precisely adjust the display zoom level with `fn` + `arrows left/right`.
 
@@ -61,11 +62,6 @@ You can precisely adjust the display zoom level with `fn` + `arrows left/right`.
 
 ## About Games
 
-All games  `.nes` `.gg` `.sms` `.md` `.ngc` should be **supported**. You can place the ROM files anywhere on your SD card and select them.
+You can place the **ROM uncompressed files** anywhere on your SD card and select them. **Avoid having folders with more than 512 items** to prevent loading times.
 
-✅ Expected behavior:
-- Smooth 60 FPS gameplay  
-- Sound emulation  
-- SD save/load functionality (NES, SMS, GG)
-
-You can pick any file from your SD using the file browser. When browsing your game list, you can **type the first few letters of a game’s name** to jump directly to it. This makes it much faster to find a specific title, especially when your library contains dozens of entries. You should **avoid game titles longer than 64 characters**.
+When browsing your game list, you can **type the first few letters of a game’s name** to jump directly to it. This makes it much faster to find a specific title, especially when your library contains dozens of entries. You should **avoid game titles longer than 64 characters**.
