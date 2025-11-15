@@ -12,6 +12,12 @@ extern "C" int ws_input_poll(int mode)
   Keyboard_Class::KeysState status = M5Cardputer.Keyboard.keysState();
   uint16_t state = 0;
 
+  // Quit
+  if (M5Cardputer.BtnA.pressedFor(1000)) {
+    esp_sleep_enable_timer_wakeup(1000);
+    esp_deep_sleep_start();
+  }
+
   // Directional pad
   const bool left  = M5Cardputer.Keyboard.isKeyPressed('e');
   const bool right = M5Cardputer.Keyboard.isKeyPressed('z') || M5Cardputer.Keyboard.isKeyPressed('s');
