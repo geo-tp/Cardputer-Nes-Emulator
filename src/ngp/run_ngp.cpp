@@ -11,7 +11,7 @@
 #include "ngc_input.h"
 #include "ngc_display.h"
 #include "ngc_scheduler.h"
-// #include "ngc_bios.h"
+#include "ngc_bios.h"
 
 #define NGP_LANG_EN 1
 #define NGP_LANG    NGP_LANG_EN  // 0 = JP, 1 = EN
@@ -205,7 +205,7 @@ void run_ngp(const uint8_t* rom_base, size_t rom_size, int machine)
     case 0x0059:   // Sonic
     case 0x0061:   // Metal Slug 2nd
         tlcsMemWriteB(0x0020001F, 0xFF);
-        // ngc_patch_snk_logo();
+        ngc_patch_snk_logo();
       break;
   }
 
@@ -230,19 +230,19 @@ void run_ngp(const uint8_t* rom_base, size_t rom_size, int machine)
       }
       
       // Log framerate
-      frames++;
-      if (millis() - status_last >= 2000)
-      {
-          size_t heap_free = heap_caps_get_free_size(MALLOC_CAP_DEFAULT);
+      // frames++;
+      // if (millis() - status_last >= 2000)
+      // {
+      //     size_t heap_free = heap_caps_get_free_size(MALLOC_CAP_DEFAULT);
 
-          printf("[NGPC_RUN] %lu frames / 2s (~%lu FPS) | HEAP: %u bytes (%.1f KB)\n",
-                frames,
-                frames / 2,
-                (unsigned int)heap_free,
-                heap_free / 1024.0f);
+      //     printf("[NGPC_RUN] %lu frames / 2s (~%lu FPS) | HEAP: %u bytes (%.1f KB)\n",
+      //           frames,
+      //           frames / 2,
+      //           (unsigned int)heap_free,
+      //           heap_free / 1024.0f);
 
-          frames = 0;
-          status_last = millis();
-      }
+      //     frames = 0;
+      //     status_last = millis();
+      // }
   }
 }
