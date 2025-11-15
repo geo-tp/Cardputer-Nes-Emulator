@@ -11,7 +11,7 @@
 #include "ngc_input.h"
 #include "ngc_display.h"
 #include "ngc_scheduler.h"
-#include "ngc_bios.h"
+// #include "ngc_bios.h"
 
 #define NGP_LANG_EN 1
 #define NGP_LANG    NGP_LANG_EN  // 0 = JP, 1 = EN
@@ -205,7 +205,7 @@ void run_ngp(const uint8_t* rom_base, size_t rom_size, int machine)
     case 0x0059:   // Sonic
     case 0x0061:   // Metal Slug 2nd
         tlcsMemWriteB(0x0020001F, 0xFF);
-        ngc_patch_snk_logo();
+        // ngc_patch_snk_logo();
       break;
   }
 
