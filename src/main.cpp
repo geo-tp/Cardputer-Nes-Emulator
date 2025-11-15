@@ -79,7 +79,7 @@ void setup() {
       display.subMessage("SD to Flash failed", 1500);
       display.subMessage("Launcher max rom 1MB", 2000);
       display.subMessage("Flash this firmware", 2000);
-      display.subMessage("to unlock full 4MB", 2000);
+      display.subMessage("to unlock full 5MB", 2000);
     }
   }
 
