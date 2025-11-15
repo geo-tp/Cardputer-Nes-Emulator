@@ -95,7 +95,7 @@ void CardputerView::welcome() {
     Display->drawRoundRect(10, 13, 217, 30, 5, PRIMARY_COLOR);
 
     // Title
-    std::string title = "Game Station 0.5";
+    std::string title = "Game Station 0.6";
     Display->setTextColor(TEXT_COLOR);
     Display->setTextSize(TEXT_BIG);
     Display->setCursor(getCenterOffset(title), 28);
