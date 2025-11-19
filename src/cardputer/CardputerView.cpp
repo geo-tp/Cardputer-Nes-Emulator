@@ -925,6 +925,7 @@ uint16_t CardputerView::colorForExt(const std::string& extRaw) const {
     if (ext == ".ngp" || ext == ".ngc") return NEOGEO_COLOR;
     if (ext == ".md") return GENESIS_COLOR;
     if (ext == ".ws" || ext == ".wsc") return WS_COLOR;
+    if (ext == ".pce") return PCE_COLOR;
 
     return TEXT_COLOR;
 }

@@ -18,11 +18,12 @@
 #define RECT_COLOR_LIGHT 0xd69a
 #define TEXT_COLOR 0xef7d 
 #define SMS_COLOR      0x1C9F  // Bleu clair (≈ #1E90FF)
-#define GENESIS_COLOR 0x32BB // Bleu cobalt  (≈ #2a2a9aff)
+#define GENESIS_COLOR  0x32BB // Bleu cobalt  (≈ #2a2a9aff)
 #define NES_COLOR      0xFA47  // Rouge orange (≈ #FF4A3D)
 #define GAMEGEAR_COLOR 0xC29F  // Violet/magenta  (≈ #C050FF)
 #define NEOGEO_COLOR   0x05E8 // Vert (≈ #2a9333ff)
 #define WS_COLOR       0x07FF  // Cyan (≈ #00FFFF)
+#define PCE_COLOR      0xE81A
 #define FOLDER_COLOR   0xFEC0  // Jaune pâle (≈ #F6EB61)
 
 // TEXT SIZE
