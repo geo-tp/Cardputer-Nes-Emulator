@@ -43,6 +43,9 @@ int contador;
 extern int gfx_hacks;
 extern int fixsoundmahjong;
 
+#define N_ALLREGS 256
+#define N_CREGS   8
+
 // ngpcdis.cpp
 //
 // Emulator for tlcs-900H based on:
@@ -187,14 +190,14 @@ unsigned char *my_pc = NULL;
 
 
 // pointers to all register(parts) that could be accessed in byte mode
-unsigned char *allregsB[256];
-unsigned char *cregsB[8];
-// pointers to all register(parts) that could be accessed in word mode
-unsigned short *allregsW[256];
-unsigned short *cregsW[8];
-// pointers to all register(parts) that could be accessed in long mode
-unsigned int *allregsL[256];
-unsigned int *cregsL[8];
+unsigned char  **allregsB = NULL;
+unsigned char  **cregsB   = NULL;
+
+unsigned short **allregsW = NULL;
+unsigned short **cregsW   = NULL;
+
+unsigned int   **allregsL = NULL;
+unsigned int   **cregsL   = NULL;
 
 // number of states passed and the number of states until a new interrupt should occur
 // 1 state = 100ns at 20 MHz
@@ -7560,8 +7563,36 @@ int (*instr_table[256])()=
    swi,  swi,  swi,  swi,  swi,  swi,  swi,  swi
 };
 
+int tlcs_alloc_tables(void)
+{
+    // allregs*
+    allregsB = calloc(N_ALLREGS, sizeof(unsigned char  *));
+    allregsW = calloc(N_ALLREGS, sizeof(unsigned short *));
+    allregsL = calloc(N_ALLREGS, sizeof(unsigned int   *));
+    
+    // cregs*
+    cregsB   = calloc(N_CREGS,   sizeof(unsigned char  *));
+    cregsW   = calloc(N_CREGS,   sizeof(unsigned short *));
+    cregsL   = calloc(N_CREGS,   sizeof(unsigned int   *));
+    
+    if (!allregsB || !allregsW || !allregsL ||
+        !cregsB   || !cregsW   || !cregsL) {
+        free(allregsB); free(allregsW); free(allregsL);
+        free(cregsB);   free(cregsW);   free(cregsL);
+        allregsB = allregsW = allregsL = NULL;
+        cregsB   = cregsW   = cregsL   = NULL;
+        return -1;
+    }
+    return 0;
+}
+
 void tlcs_init(void)
 {
+    if (tlcs_alloc_tables() < 0) {
+        fprintf(stderr, "tlcs_init: unable to allocate tables\n");
+        exit(1);
+    }
+
     int i,j;
 
     // flags tables initialisation
