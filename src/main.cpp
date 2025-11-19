@@ -13,6 +13,7 @@
 #include "sms/run_sms.h"
 #include "ngp/run_ngp.h"
 #include "ws/run_ws.h"
+#include "pce/run_pce.h"
 #include "genesis/run_genesis.h"
 #include "last_game.h"
 #define RETRO_COMPAT_IMPLEMENTATION
@@ -135,6 +136,9 @@ void setup() {
   // Prepare rom filename for emulators
   auto pos = romPath.find_last_of("/\\");
   std::string romName = (pos == std::string::npos) ? romPath : romPath.substr(pos + 1);
+
+  printf("HEAP BEFORE EMU: %u bytes\n", esp_get_free_heap_size());
+
   
   // Run the emulator
   if (ext == ROM_TYPE_NES) {
@@ -159,6 +163,10 @@ void setup() {
   else if (ext == ROM_TYPE_WS) {
       // --- WonderSwan ---
       run_ws(get_rom_ptr(), get_rom_size(), romName.c_str(), detectWonderSwanFromRom(romPath));
+  }
+  else if (ext == ROM_TYPE_PCE) {
+      // --- PC Engine ---
+      run_pce(get_rom_ptr(), get_rom_size(), romName.c_str());
   }
   else {
       display.topBar("ERROR", false, false);
