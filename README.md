@@ -5,7 +5,7 @@
 ![NGP emulator screen captures on the M5Stack Cardputer](ngp_emulator_s.jpg)
 ![Megadrive emulator screen captures on the M5Stack Cardputer](megadrive_emulator_s.jpg)
 
-Powered by [Nofrendo](https://github.com/moononournation/arduino-nofrendo), **Smsplus**, [Race](https://github.com/libretro/RACE), [Gwenesis](https://github.com/bzhxx/gwenesis) and [Oswan](https://github.com/alekmaul/oswan). 
+Powered by [Nofrendo](https://github.com/moononournation/arduino-nofrendo), **Smsplus**, [Race](https://github.com/libretro/RACE), [Gwenesis](https://github.com/bzhxx/gwenesis), [Oswan](https://github.com/alekmaul/oswan) and **PCE-GO** 
 
 **Running on the M5Stack Cardputer**, with sound, video, game save, and controls.
 
@@ -14,14 +14,15 @@ Powered by [Nofrendo](https://github.com/moononournation/arduino-nofrendo), **Sm
 | **NES**           | ✅ | ✅ | ✅ | ✅ | ✅ | Few mappers issues in some games |
 | **Master System** | ✅ | ✅ | ✅ | ✅ | ✅ | Fully compatible |
 | **Game Gear**     | ✅ | ✅ | ✅ | ✅ | ✅ | Fully compatible |
+| **PC Engine**     | ✅ | ✅ | ⚠️ | ✅ | ✅ | Fully compatible |
 | **Mega Drive**    | ✅ | ✅ | ⚠️ | ✅ | ✅ | Some slowdown and not accurate sound in heavy titles |
 | **Neo Geo Pocket**| ✅ | ✅ | ⚠️ | ✅ | ✅| Some slowdown in heavy titles |
-| **WonderSwan**    | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | No support for SRAM >32KB, not full speed (75FPS) in most games  |
+| **WonderSwan**    | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | No support for SRAM >32KB, not fullspeed (75FPS) in most games  |
 
 
-It runs **`.nes` `.sms` `.gg`  `.md` `.ngc` `.ngp` `.ws` `.wsc` ROM files directly from the SD**.
+It runs **`.nes` `.sms` `.gg`  `.md` `.ngc` `.ngp` `.ws` `.wsc` `.pce` ROM files directly from the SD**.
 
-> **Make sure your ROMs are uncompressed** (.nes .gg .sms .ngc .ngp .md .ws .wsc only — not .zip, .7z, or .rar).
+> **Make sure your ROMs are uncompressed** (not .zip, .7z, or .rar).
 
 ## Controls
 
@@ -65,3 +66,5 @@ You can precisely adjust the display zoom level with `fn` + `arrows left/right`.
 You can place the **ROM uncompressed files** anywhere on your SD card and select them. **Avoid having folders with more than 512 items** to prevent loading times.
 
 When browsing your game list, you can **type the first few letters of a game’s name** to jump directly to it. This makes it much faster to find a specific title, especially when your library contains dozens of entries. You should **avoid game titles longer than 64 characters**.
+
+ROMs **up to 5MB can be played when flashing the firmware directly** (which covers 99.9% of all games), if you're using the [Launcher](https://github.com/bmorcelli/Launcher), it is limited to 1 MB.
