@@ -318,7 +318,7 @@ typedef struct
 
 typedef struct
 {
-  cpu_memory_map memory_map[256]; /* memory mapping */
+  cpu_memory_map *memory_map; /* memory mapping */
 
   cpu_idle_t poll;      /* polling detection */
 

@@ -68,10 +68,10 @@ void vdpm_log(const char *subs, const char *fmt, ...) {
   unsigned char *VRAM;
 #endif
 
-unsigned short CRAM[CRAM_MAX_SIZE];           // CRAM - Palettes
-unsigned short CRAM565[CRAM_MAX_SIZE * 4];    // CRAM - Palettes
-unsigned short VSRAM[VSRAM_MAX_SIZE];         // VSRAM - Scrolling
-unsigned char SAT_CACHE[SAT_CACHE_MAX_SIZE];        // Sprite cache
+unsigned short *CRAM;           // CRAM - Palettes
+unsigned short *CRAM565;    // CRAM - Palettes
+unsigned short *VSRAM;         // VSRAM - Scrolling
+unsigned char *SAT_CACHE;        // Sprite cache
 unsigned char gwenesis_vdp_regs[REG_SIZE];    // Registers
 unsigned short fifo[FIFO_SIZE];               // Fifo
 

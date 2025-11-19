@@ -48,15 +48,14 @@ extern unsigned char *VRAM;
 
 #endif
 
-extern unsigned short CRAM[];            // CRAM - Palettes
-extern unsigned char SAT_CACHE[]__attribute__((aligned(4)));        // Sprite cache
+extern unsigned short *CRAM;            // CRAM - Palettes
+extern unsigned char *SAT_CACHE;        // Sprite cache
 extern unsigned char gwenesis_vdp_regs[]; // Registers
+extern unsigned short *CRAM565;    // CRAM - Palettes
+extern unsigned short *VSRAM;        // VSRAM - Scrolling
 
-extern unsigned short CRAM565[];    // CRAM - Palettes
-static uint16_t CRAM565_SH[64]; // shadow (≈ 0.5x)
-static uint16_t CRAM565_HI[64]; // highlight (≈ 1.5x, clamp)
-
-extern unsigned short VSRAM[];        // VSRAM - Scrolling
+uint16_t *CRAM565_SH = NULL;   // shadow
+uint16_t *CRAM565_HI = NULL;   // highlight
 
 // Define screen buffers: original and scaled for host RGB
 unsigned char *screen, *scaled_screen;
@@ -138,6 +137,19 @@ void gwenesis_vdp_set_buffer(unsigned short *ptr_screen_buffer)
 }
 
 void gwenesis_vdp_allocate_buffers() {
+    SAT_CACHE = (unsigned char*)malloc(SAT_CACHE_MAX_SIZE * sizeof(unsigned char));
+    memset(SAT_CACHE, 0, SAT_CACHE_MAX_SIZE * sizeof(unsigned char));
+    CRAM = (unsigned short*)malloc(CRAM_MAX_SIZE * sizeof(unsigned short));
+    memset(CRAM, 0, CRAM_MAX_SIZE * sizeof(unsigned short));
+    CRAM565 = (unsigned short*)malloc(CRAM_MAX_SIZE * 4 * sizeof(unsigned short));
+    memset(CRAM565, 0, CRAM_MAX_SIZE * 4 * sizeof(unsigned short));
+    VSRAM = (unsigned short*)malloc(VSRAM_MAX_SIZE * sizeof(unsigned short));
+    memset(VSRAM, 0, VSRAM_MAX_SIZE * sizeof(unsigned short));
+    CRAM565_SH = (uint16_t*)malloc(64 * sizeof(uint16_t));
+    memset(CRAM565_SH, 0, 64 * sizeof(uint16_t));
+    CRAM565_HI = (uint16_t*)malloc(64 * sizeof(uint16_t));
+    memset(CRAM565_HI, 0, 64 * sizeof(uint16_t));
+
     size_t buffer_size = SCREEN_WIDTH + PIX_OVERFLOW*2;
     if (!render_buffer) {
         render_buffer =  malloc(buffer_size);
