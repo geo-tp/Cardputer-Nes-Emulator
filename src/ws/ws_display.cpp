@@ -189,7 +189,7 @@ extern "C" void ws_display_start()
 
   BaseType_t ok = xTaskCreatePinnedToCore(
       ws_display_task, "WSDisp",
-      2048, nullptr, 6, &s_wsDispTask,
+      2048, nullptr, 5, &s_wsDispTask,
       0 /* core */);
 
   if (ok != pdPASS) {

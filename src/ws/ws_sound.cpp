@@ -164,7 +164,7 @@ extern "C" void ws_sound_start_task(uint32_t period_ms, int core) {
   s_periodTicks = pdMS_TO_TICKS(period_ms);
 
   s_runAudio = true;
-  xTaskCreatePinnedToCore(ws_audio_task, "ws_audio", 2048, nullptr, 6, &s_taskAudio, core < 0 ? 0 : core);
+  xTaskCreatePinnedToCore(ws_audio_task, "ws_audio", 2048, nullptr, 5, &s_taskAudio, core < 0 ? 0 : core);
 }
 
 extern "C" void ws_sound_stop_task(void) {
