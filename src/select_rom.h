@@ -4,9 +4,9 @@
 #include <vector>
 #include <cstdint>
 
-#include "sd/SdService.h"
+#include "cardputer/SdService.h"
 #include "cardputer/CardputerView.h"
-#include "selector/VerticalSelector.h" 
+#include "cardputer/VerticalSelector.h" 
 #include "cardputer/CardputerInput.h"
 
 // Returns the absolute path of a .nes selected file

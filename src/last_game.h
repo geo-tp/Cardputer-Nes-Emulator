@@ -3,10 +3,10 @@
 #include <string>
 #include <algorithm>
 #include <Preferences.h>
-#include "sd/SdService.h"
+#include "cardputer/SdService.h"
 #include "cardputer/CardputerView.h"
 #include "cardputer/CardputerInput.h"
-#include "selector/ConfirmationSelector.h"
+#include "cardputer/ConfirmationSelector.h"
 
 // Helper: basename from path
 static inline std::string _basename(const std::string& path) {

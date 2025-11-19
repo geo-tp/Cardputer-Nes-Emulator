@@ -10,7 +10,7 @@ extern "C" {
 #include "pce_sound.h"
 #include "pce_input.h"
 
-// ================== SAVE STATE ==================
+// ================== SAVE STATE (NYI) ==================
 
 extern "C" bool pce_save_state_to_file(const char *path)
 {

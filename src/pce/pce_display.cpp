@@ -372,7 +372,6 @@ extern "C" void pce_display_submit_frame(const uint8_t *index_fb_base,
   // drop if full
   BaseType_t ok = xQueueSend(s_frameQ, &msg, 0);
   if (ok != pdTRUE) {
-    // frame drop (silent to avoid spam)
     // printf("[PCE-DISP] frame dropped\n");
   }
 }

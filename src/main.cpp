@@ -2,7 +2,7 @@
 #include <select_rom.h>
 #include "cardputer/CardputerView.h"
 #include "cardputer/CardputerInput.h"
-#include "sd/SdService.h"
+#include "cardputer/SdService.h"
 #include "vfs/vfs_xip.h"
 #include "vfs/rom_flash_io.h"
 #include "vfs/rom_xip.h"
@@ -138,7 +138,6 @@ void setup() {
   std::string romName = (pos == std::string::npos) ? romPath : romPath.substr(pos + 1);
 
   printf("HEAP BEFORE EMU: %u bytes\n", esp_get_free_heap_size());
-
   
   // Run the emulator
   if (ext == ROM_TYPE_NES) {
