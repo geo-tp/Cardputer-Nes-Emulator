@@ -1,4 +1,5 @@
 #include "CardputerView.h"
+#include "Welcome.h"
 
 
 M5GFX* CardputerView::Display = nullptr;
@@ -89,78 +90,15 @@ void CardputerView::showKeymapping(bool threeButtons) {
 }
 
 void CardputerView::welcome() {
-    // Background & title frame
-    Display->fillScreen(BACKGROUND_COLOR);
-    Display->fillRoundRect(10, 13, 217, 30, 5, RECT_COLOR_DARK);
-    Display->drawRoundRect(10, 13, 217, 30, 5, PRIMARY_COLOR);
-
+    Display->setSwapBytes(true);
+    Display->pushImage(0, 0, BGGAMESTATION_S_WIDTH, BGGAMESTATION_S_HEIGHT, bggamestation_s);
+   
     // Title
-    std::string title = "Game Station 0.6";
+    std::string title = "Game Station 0.7";
     Display->setTextColor(TEXT_COLOR);
     Display->setTextSize(TEXT_BIG);
-    Display->setCursor(getCenterOffset(title), 28);
+    Display->setCursor(getCenterOffset(title), 65);
     Display->printf("%s", title.c_str());
-
-    // Info panel
-    const int boxX = 12;
-    const int boxY = 53;
-    const int boxW = Display->width() - 24;
-    const int boxH = (Display->height() / 2) + 2;
-
-    Display->fillRoundRect(boxX, boxY, boxW, boxH, DEFAULT_ROUND_RECT, RECT_COLOR_DARK);
-    Display->drawRoundRect(boxX, boxY, boxW, boxH, DEFAULT_ROUND_RECT, PRIMARY_COLOR);
-
-    Display->setTextSize(TEXT_MEDIUM);
-    // Ligne consoles
-    int y = boxY + 17;
-    int x = getCenterOffset("NES - SMS - MD - GG - NGP - WS");
-
-    Display->setCursor(x, y);
-    Display->setTextColor(NES_COLOR);
-    Display->print("NES");
-
-    Display->setTextColor(TEXT_COLOR);
-    Display->print(" - ");
-
-    Display->setTextColor(SMS_COLOR);
-    Display->print("SMS");
-
-    Display->setTextColor(TEXT_COLOR);
-    Display->print(" - ");
-
-    Display->setTextColor(GENESIS_COLOR);
-    Display->print("MD");
-
-    Display->setTextColor(TEXT_COLOR);
-    Display->print(" - ");
-
-    Display->setTextColor(GAMEGEAR_COLOR);
-    Display->print("GG");
-
-    Display->setTextColor(TEXT_COLOR);
-    Display->print(" - ");
-
-    Display->setTextColor(NEOGEO_COLOR);
-    Display->print("NGC");
-
-    Display->setTextColor(TEXT_COLOR);
-    Display->print(" - ");
-
-    Display->setTextColor(WS_COLOR);
-    Display->print("WS");
-
-    Display->setTextSize(TEXT_MEDIUM);
-    Display->setTextColor(TEXT_COLOR);
-    std::string l2 = "Use rom uncompressed file";
-    Display->setCursor(getCenterOffset(l2), boxY + 35);
-    Display->printf("%s", l2.c_str());
-
-    // Start prompt
-    Display->setTextColor(PRIMARY_COLOR);
-    Display->setTextSize(TEXT_WIDE);
-    std::string press = "Press any key to start";
-    Display->setCursor(getCenterOffset(press), boxY + boxH - 15);
-    Display->printf("%s", press.c_str());
 }
 
 void CardputerView::topBar(const std::string& title, bool submenu, bool searchBar) {
