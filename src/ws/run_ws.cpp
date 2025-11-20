@@ -39,7 +39,6 @@ extern "C" void run_ws(const uint8_t* rom, size_t len, const char* rom_name, boo
   // SRAM save/load
   ws_save_init(rom_name);
   ws_save_load();
-  printf("[WS] SRAM save/load initialized\n");
 
   // Timing
   const uint32_t frame_us = 1000000u / 75u; // 13.3 ms

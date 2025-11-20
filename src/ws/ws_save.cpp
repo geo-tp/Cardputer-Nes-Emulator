@@ -20,7 +20,7 @@ extern int CartKind;
 
 #define WS_SAVE_DIR "/sd/ws_saves"
 #define CHECK_MS    500
-#define GAP_MS      5000
+#define GAP_MS      10000
 
 static uint8_t*     g_sram        = nullptr;   // pointer vers RAMMap
 static size_t       g_sram_len    = 0;         // = RAMSize
@@ -31,6 +31,8 @@ static TickType_t   g_next_allow  = 0;
 static TaskHandle_t g_task        = nullptr;
 static volatile bool g_flag_flush = false;
 static volatile bool g_flag_check = false;
+static TickType_t g_first_dirty = 0;
+static TickType_t g_last_save   = 0;
 
 // ====================== CRC32 ======================
 static uint32_t* s_crc32_tbl = NULL;  // 256 * 4
@@ -61,7 +63,7 @@ static uint32_t crc32_update(uint32_t crc, const uint8_t* b, size_t n) {
     for (size_t i = 0; i < n; ++i)
       crc = T[(crc ^ b[i]) & 0xFFu] ^ (crc >> 8);
   } else {
-    // Fallback bitwise (si malloc a échoué)
+    // Fallback bitwise
     for (size_t i = 0; i < n; ++i) {
       uint32_t c = crc ^ b[i];
       for (int k = 0; k < 8; ++k)
@@ -83,16 +85,6 @@ static const char* basename_ptr(const char* p){
   return p;
 }
 
-static void sanitize_filename(char* s){
-  size_t w=0;
-  for(size_t i=0; s[i] && w<64; ++i){
-    char c=s[i];
-    bool ok=(c>='A'&&c<='Z')||(c>='a'&&c<='z')||(c>='0'&&c<='9')||c=='.'||c=='_'||c=='-';
-    s[w++]= ok?c:'_';
-  }
-  s[w]='\0';
-}
-
 static void make_save_path(const char* romPathOrName){
   ensure_dir();
 
@@ -107,7 +99,6 @@ static void make_save_path(const char* romPathOrName){
   } else {
     strcpy(name, "ws_autosave.sav");
   }
-  sanitize_filename(name);
 
   int n = snprintf(g_save_path, PATH_MAX, WS_SAVE_DIR "/%s", name);
   if (n < 0 || (size_t)n >= PATH_MAX) {
@@ -136,22 +127,34 @@ static int sram_is_trivial(const uint8_t* p, size_t n){
 // ====================== I/O ======================
 static void flush_now(){
   if (!g_sram || !g_sram_len) return;
-  if (!path_parent_ready(g_save_path)) { printf("[WS][SAVE] skip flush (storage not ready)\n"); return; }
-  if (sram_is_trivial(g_sram, g_sram_len)) { printf("[WS][SAVE] trivial SRAM/EEP, skip write\n"); return; }
+  if (!path_parent_ready(g_save_path)) return;
+  if (sram_is_trivial(g_sram, g_sram_len)) return;
 
-  char tmp[PATH_MAX]; snprintf(tmp, sizeof(tmp), "%s.tmp", g_save_path); tmp[sizeof(tmp)-1]='\0';
+  FILE* f = fopen(g_save_path, "r+b");
+  if (!f) return;
 
-  FILE* f = fopen(tmp, "wb");
-  if (!f){ printf("[WS][SAVE] fopen tmp fail %s\n", tmp); return; }
-  setvbuf(f, NULL, _IONBF, 0);
+  const size_t CHUNK = 512;
+  size_t remaining = g_sram_len;
+  uint8_t* src = g_sram;
 
-  size_t w = fwrite(g_sram, 1, g_sram_len, f);
-  fflush(f); fsync(fileno(f)); fclose(f);
-  if (w != g_sram_len){ printf("[WS][SAVE] short write %u/%u -> %s\n",(unsigned)w,(unsigned)g_sram_len,tmp); return; }
+  while (remaining > 0) {
+    size_t n = remaining < CHUNK ? remaining : CHUNK;
+    size_t w = fwrite(src, 1, n, f);
+    if (w != n) {
+      // erreur write
+      fclose(f);
+      return;
+    }
+    src       += n;
+    remaining -= n;
+  }
 
-  unlink(g_save_path);
-  if (rename(tmp, g_save_path)!=0){ printf("[WS][SAVE] rename failed %s -> %s\n", tmp, g_save_path); return; }
-  printf("[WS][SAVE] wrote %u bytes -> %s\n", (unsigned)w, g_save_path);
+  fflush(f);
+  fsync(fileno(f));
+  fclose(f);
+
+  printf("[WS][SAVE] wrote %u bytes -> %s\n",
+         (unsigned)g_sram_len, g_save_path);
 }
 
 static void SaveTask(void*){
@@ -179,33 +182,109 @@ static void SaveTask(void*){
 // ====================== API ======================
 void ws_save_init(const char* romPathOrName){
   bool is_eep  = (CartKind & CK_EEP) != 0;
-  bool ok_size = is_eep ? (RAMSize == 0x80 || RAMSize == 0x400 || RAMSize == 0x800)
-                        : (RAMSize > 0 && RAMSize <= 0x8000); // max 32KB SRAM
 
-  if (!ok_size || RAMBanks < 1 || !RAMMap || !RAMMap[0]){
+  // EEP : 128 / 1024 / 2048 octets
+  // SRAM : entre 1 et 32 Ko
+  #ifdef WS_SAVE_ENABLED
+  bool ok_size = is_eep
+      ? (RAMSize == 0x80 || RAMSize == 0x400 || RAMSize == 0x800)
+      : (RAMSize > 0 && RAMSize <= 0x8000); // max 32KB SRAM
+  #else
+  bool ok_size = false;
+  #endif
+
+  if (!ok_size || RAMBanks < 1 || !RAMMap || !RAMMap[0]) {
     printf("[WS][SAVE] ignored (size=%d, banks=%d, kind=%s)\n",
            RAMSize, RAMBanks, is_eep ? "EEP" : "SRAM");
-    g_sram=nullptr; g_sram_len=0; return;
+    g_sram      = nullptr;
+    g_sram_len  = 0;
+    g_crc_last  = 0;
+    g_next_check = g_next_allow = 0;
+    g_first_dirty = g_last_save = 0;
+    return;
   }
 
-  g_save_path = (char*)malloc(PATH_MAX);
-  if (!g_save_path){
-    printf("[WS][SAVE] ignored (OOM on path alloc)\n");
-    g_sram=nullptr; g_sram_len=0; return;
+  if (!g_save_path) {
+    g_save_path = (char*)malloc(PATH_MAX);
+    if (!g_save_path) {
+      printf("[WS][SAVE] ignored (OOM on path alloc)\n");
+      g_sram      = nullptr;
+      g_sram_len  = 0;
+      g_crc_last  = 0;
+      g_next_check = g_next_allow = 0;
+      g_first_dirty = g_last_save = 0;
+      return;
+    }
   }
-  g_save_path[0]='\0';
-  g_sram     = RAMMap[0];
-  g_sram_len = (size_t)RAMSize;
 
+  g_save_path[0] = '\0';
+  g_sram         = RAMMap[0];
+  g_sram_len     = (size_t)RAMSize;
+
+  // Construit chemin
   make_save_path(romPathOrName);
-  g_crc_last = crc32_update(0, g_sram, g_sram_len);
-  g_next_check = g_next_allow = 0;
 
-  if (!g_task){
-    xTaskCreatePinnedToCore(SaveTask, "WS_SaveTask", 3072, nullptr, 6, &g_task, 0);
+  if (path_parent_ready(g_save_path)) {
+    FILE* f = fopen(g_save_path, "rb");
+    if (!f) {
+      f = fopen(g_save_path, "wb");
+      if (f) {
+        const size_t CHUNK = 512;
+        uint8_t buf[CHUNK];
+        memset(buf, 0xFF, sizeof(buf));
+
+        size_t remaining = g_sram_len;
+        while (remaining > 0) {
+          size_t n = (remaining < CHUNK) ? remaining : CHUNK;
+          size_t w = fwrite(buf, 1, n, f);
+          if (w != n) {
+            printf("[WS][SAVE] prealloc write error\n");
+            break;
+          }
+          remaining -= n;
+        }
+
+        fflush(f);
+        fsync(fileno(f));
+        fclose(f);
+
+        printf("[WS][SAVE] preallocated save file %s (%u bytes)\n",
+               g_save_path, (unsigned)g_sram_len);
+      } else {
+        printf("[WS][SAVE] failed to create save file: %s\n", g_save_path);
+      }
+    } else {
+      fclose(f);
+    }
+  } else {
+    printf("[WS][SAVE] storage path not ready, will try later\n");
   }
+
+  // CRC initial
+  g_crc_last    = crc32_update(0, g_sram, g_sram_len);
+  g_next_check  = 0;
+  g_next_allow  = 0;
+  g_first_dirty = 0;
+  g_last_save   = 0;
+  g_flag_check  = false;
+  g_flag_flush  = false;
+
+  if (!g_task) {
+    xTaskCreatePinnedToCore(
+      SaveTask,
+      "WS_SaveTask",
+      3072,
+      nullptr,
+      6,
+      &g_task,
+      0
+    );
+  }
+
   printf("[WS][SAVE] path=%s len=%u (%s)\n",
-         g_save_path, (unsigned)g_sram_len, is_eep ? "EEP" : "SRAM");
+         g_save_path,
+         (unsigned)g_sram_len,
+         is_eep ? "EEP" : "SRAM");
 }
 
 void ws_save_load(void){
