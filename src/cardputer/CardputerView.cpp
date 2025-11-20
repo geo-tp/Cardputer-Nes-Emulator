@@ -94,7 +94,7 @@ void CardputerView::welcome() {
     Display->pushImage(0, 0, BGGAMESTATION_S_WIDTH, BGGAMESTATION_S_HEIGHT, bggamestation_s);
    
     // Title
-    std::string title = "Game Station 0.7";
+    std::string title = "Game Station 0.6";
     Display->setTextColor(TEXT_COLOR);
     Display->setTextSize(TEXT_BIG);
     Display->setCursor(getCenterOffset(title), 65);
