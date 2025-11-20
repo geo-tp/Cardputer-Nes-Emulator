@@ -17,7 +17,7 @@ Powered by [Nofrendo](https://github.com/moononournation/arduino-nofrendo), **Sm
 | **PC Engine**     | ✅ | ✅ | ⚠️ | ✅ | ✅ | Fully compatible |
 | **Mega Drive**    | ✅ | ✅ | ⚠️ | ✅ | ✅ | Some slowdown and not accurate sound in heavy titles |
 | **Neo Geo Pocket**| ✅ | ✅ | ⚠️ | ✅ | ✅| Some slowdown in heavy titles |
-| **WonderSwan**    | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | No support for SRAM >32KB, not fullspeed (75FPS) in most games  |
+| **WonderSwan**    | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ | No support for SRAM >32KB, not fullspeed (75FPS) in most games  |
 
 
 It runs **`.nes` `.sms` `.gg`  `.md` `.ngc` `.ngp` `.ws` `.wsc` `.pce` ROM files directly from the SD**.
